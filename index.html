@@ -1,79 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Supabase Login System</title>
+    <title>Advocate CRM</title>
 </head>
-<body style="font-family: Arial; text-align: center; margin-top: 50px;">
 
-    <h2>Login (Mobile + PIN)</h2>
+<body style="font-family: Arial; text-align: center; margin-top: 30px;">
 
-    <input type="text" id="mobile" placeholder="Enter Mobile Number"><br><br>
-    <input type="password" id="pin" placeholder="Enter PIN"><br><br>
+    <h1>⚖️ Advocate CRM</h1>
 
-    <button onclick="login()">Login</button>
-    <button onclick="addUser()">Add Test User</button>
-    <button onclick="getUsers()">Show Users</button>
+    <h3>Add Case</h3>
+    <input type="text" id="client_name" placeholder="Client Name"><br><br>
+    <input type="text" id="case_type" placeholder="Case Type"><br><br>
+    <input type="date" id="hearing_date"><br><br>
 
-    <p id="result"></p>
+    <button onclick="addCase()">Add Case</button>
+    <button onclick="getCases()">View Cases</button>
+
+    <h3>Cases List</h3>
+    <pre id="output"></pre>
 
     <!-- Supabase CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // 🔴 Replace this with your Supabase Project URL
+        // 🔴 Replace ONLY this with your project URL
         const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
 
-        // ✅ Your Key (Already Added)
+        // ✅ Your Supabase Key (Already Replaced)
         const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
 
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // ✅ Add User
-        async function addUser() {
+        // ✅ Add Case
+        async function addCase() {
+            const client_name = document.getElementById("client_name").value;
+            const case_type = document.getElementById("case_type").value;
+            const hearing_date = document.getElementById("hearing_date").value;
+
             const { data, error } = await supabase
-                .from('users')
+                .from('cases')
                 .insert([
-                    { name: "Test User", mobile: "9999999999", pin: "1234" }
+                    { client_name, case_type, hearing_date }
                 ]);
 
             if (error) {
-                document.getElementById("result").innerText = "Error: " + error.message;
+                alert("Error: " + error.message);
             } else {
-                document.getElementById("result").innerText = "User Added Successfully!";
+                alert("Case Added Successfully ✅");
             }
         }
 
-        // ✅ Get Users
-        async function getUsers() {
+        // ✅ Get Cases
+        async function getCases() {
             const { data, error } = await supabase
-                .from('users')
-                .select('*');
-
-            if (error) {
-                document.getElementById("result").innerText = "Error: " + error.message;
-            } else {
-                document.getElementById("result").innerText = JSON.stringify(data, null, 2);
-                console.log(data);
-            }
-        }
-
-        // ✅ Login Function
-        async function login() {
-            const mobile = document.getElementById("mobile").value;
-            const pin = document.getElementById("pin").value;
-
-            const { data, error } = await supabase
-                .from('users')
+                .from('cases')
                 .select('*')
-                .eq('mobile', mobile)
-                .eq('pin', pin);
+                .order('hearing_date', { ascending: true });
 
             if (error) {
-                document.getElementById("result").innerText = "Error: " + error.message;
-            } else if (data.length > 0) {
-                document.getElementById("result").innerText = "Login Successful ✅";
+                document.getElementById("output").innerText = "Error: " + error.message;
             } else {
-                document.getElementById("result").innerText = "Invalid Mobile or PIN ❌";
+                document.getElementById("output").innerText = JSON.stringify(data, null, 2);
             }
         }
     </script>
