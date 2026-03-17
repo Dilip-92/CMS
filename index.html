@@ -2,68 +2,138 @@
 <html>
 <head>
     <title>Advocate CRM</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background:#f4f6f9;}
+        input, select, button { padding:8px; margin:5px; }
+        .card { background:white; padding:15px; border-radius:10px; margin-bottom:15px; }
+        .hidden { display:none; }
+    </style>
 </head>
 
-<body style="font-family: Arial; text-align: center; margin-top: 30px;">
+<body>
 
-    <h1>⚖️ Advocate CRM</h1>
+<h2>⚖️ Advocate CRM</h2>
 
-    <h3>Add Case</h3>
-    <input type="text" id="client_name" placeholder="Client Name"><br><br>
-    <input type="text" id="case_type" placeholder="Case Type"><br><br>
-    <input type="date" id="hearing_date"><br><br>
+<!-- LOGIN -->
+<div id="loginDiv" class="card">
+    <h3>Login</h3>
+    <input id="mobile" placeholder="Mobile"><br>
+    <input id="pin" type="password" placeholder="PIN"><br>
+    <button onclick="login()">Login</button>
+</div>
 
-    <button onclick="addCase()">Add Case</button>
-    <button onclick="getCases()">View Cases</button>
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
 
-    <h3>Cases List</h3>
-    <pre id="output"></pre>
+    <div class="card">
+        <h3>Add Case</h3>
+        <input id="client_name" placeholder="Client Name">
+        <input id="case_type" placeholder="Case Type">
+        <input id="hearing_date" type="date">
+        
+        <select id="status">
+            <option>Pending</option>
+            <option>Closed</option>
+        </select>
 
-    <!-- Supabase CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        <input type="file" id="file">
 
-    <script>
-        // 🔴 Replace ONLY this with your project URL
-        const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
+        <button onclick="addCase()">Add Case</button>
+    </div>
 
-        // ✅ Your Supabase Key (Already Replaced)
-        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+    <div class="card">
+        <h3>Search</h3>
+        <input id="search" placeholder="Search by client">
+        <select id="filterStatus">
+            <option value="">All</option>
+            <option>Pending</option>
+            <option>Closed</option>
+        </select>
 
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        <button onclick="getCases()">Search</button>
+    </div>
 
-        // ✅ Add Case
-        async function addCase() {
-            const client_name = document.getElementById("client_name").value;
-            const case_type = document.getElementById("case_type").value;
-            const hearing_date = document.getElementById("hearing_date").value;
+    <div class="card">
+        <h3>Cases</h3>
+        <pre id="output"></pre>
+    </div>
 
-            const { data, error } = await supabase
-                .from('cases')
-                .insert([
-                    { client_name, case_type, hearing_date }
-                ]);
+</div>
 
-            if (error) {
-                alert("Error: " + error.message);
-            } else {
-                alert("Case Added Successfully ✅");
-            }
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
+
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+
+const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+// LOGIN
+async function login() {
+    const mobile = document.getElementById("mobile").value;
+    const pin = document.getElementById("pin").value;
+
+    const { data } = await db
+        .from('users')
+        .select('*')
+        .eq('mobile', mobile)
+        .eq('pin', pin);
+
+    if (data.length > 0) {
+        document.getElementById("loginDiv").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+    } else {
+        alert("Invalid Login");
+    }
+}
+
+// ADD CASE
+async function addCase() {
+    const file = document.getElementById("file").files[0];
+    let fileUrl = "";
+
+    if (file) {
+        const { data, error } = await db.storage
+            .from('documents')
+            .upload(Date.now() + "_" + file.name, file);
+
+        if (!error) {
+            fileUrl = data.path;
         }
+    }
 
-        // ✅ Get Cases
-        async function getCases() {
-            const { data, error } = await supabase
-                .from('cases')
-                .select('*')
-                .order('hearing_date', { ascending: true });
+    await db.from('cases').insert([{
+        client_name: document.getElementById("client_name").value,
+        case_type: document.getElementById("case_type").value,
+        hearing_date: document.getElementById("hearing_date").value,
+        status: document.getElementById("status").value,
+        file_url: fileUrl
+    }]);
 
-            if (error) {
-                document.getElementById("output").innerText = "Error: " + error.message;
-            } else {
-                document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-            }
-        }
-    </script>
+    alert("Case Added");
+}
+
+// GET CASES (SEARCH + FILTER)
+async function getCases() {
+    let query = db.from('cases').select('*');
+
+    const search = document.getElementById("search").value;
+    const status = document.getElementById("filterStatus").value;
+
+    if (search) {
+        query = query.ilike('client_name', '%' + search + '%');
+    }
+
+    if (status) {
+        query = query.eq('status', status);
+    }
+
+    const { data } = await query.order('hearing_date');
+
+    document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+}
+</script>
 
 </body>
 </html>
