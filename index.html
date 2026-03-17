@@ -1,140 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Supabase Full App</title>
-
-  <!-- Supabase CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body {
-      font-family: Arial;
-      background: #f4f4f4;
-      text-align: center;
-      margin-top: 50px;
-    }
-
-    .box {
-      background: white;
-      padding: 20px;
-      margin: 20px auto;
-      width: 300px;
-      border-radius: 10px;
-      box-shadow: 0px 0px 10px gray;
-    }
-
-    input {
-      width: 90%;
-      padding: 10px;
-      margin: 5px;
-    }
-
-    button {
-      padding: 10px 15px;
-      margin: 5px;
-      background: blue;
-      color: white;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-    }
-
-    button:hover {
-      background: darkblue;
-    }
-  </style>
+    <title>Supabase Login System</title>
 </head>
+<body style="font-family: Arial; text-align: center; margin-top: 50px;">
 
-<body>
+    <h2>Login (Mobile + PIN)</h2>
 
-<h1>Supabase App</h1>
+    <input type="text" id="mobile" placeholder="Enter Mobile Number"><br><br>
+    <input type="password" id="pin" placeholder="Enter PIN"><br><br>
 
-<!-- Add User -->
-<div class="box">
-  <h3>Add User</h3>
-  <input id="name" placeholder="Name">
-  <input id="mobile" placeholder="Mobile">
-  <input id="pin" placeholder="PIN">
-  <button onclick="addUser()">Add User</button>
-</div>
+    <button onclick="login()">Login</button>
+    <button onclick="addUser()">Add Test User</button>
+    <button onclick="getUsers()">Show Users</button>
 
-<!-- Login -->
-<div class="box">
-  <h3>Login</h3>
-  <input id="loginMobile" placeholder="Mobile">
-  <input id="loginPin" placeholder="PIN">
-  <button onclick="login()">Login</button>
-</div>
+    <p id="result"></p>
 
-<!-- View Users -->
-<div class="box">
-  <h3>View Users</h3>
-  <button onclick="getUsers()">Get Users</button>
-  <ul id="userList"></ul>
-</div>
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<script>
-  // ✅ Your Supabase Credentials
-  const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-  const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+    <script>
+        // 🔴 Replace this with your Supabase Project URL
+        const supabaseUrl = "https://YOUR_PROJECT_ID.supabase.co";
 
-  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        // ✅ Your Key (Already Added)
+        const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
 
-  // ✅ Add User
-  async function addUser() {
-    const name = document.getElementById("name").value;
-    const mobile = document.getElementById("mobile").value;
-    const pin = document.getElementById("pin").value;
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-    const { data, error } = await supabaseClient
-      .from('users')
-      .insert([{ name, mobile, pin }]);
+        // ✅ Add User
+        async function addUser() {
+            const { data, error } = await supabase
+                .from('users')
+                .insert([
+                    { name: "Test User", mobile: "9999999999", pin: "1234" }
+                ]);
 
-    if (error) {
-      alert("Error: " + error.message);
-    } else {
-      alert("User Added Successfully");
-    }
-  }
+            if (error) {
+                document.getElementById("result").innerText = "Error: " + error.message;
+            } else {
+                document.getElementById("result").innerText = "User Added Successfully!";
+            }
+        }
 
-  // ✅ Get Users
-  async function getUsers() {
-    const { data, error } = await supabaseClient
-      .from('users')
-      .select('*');
+        // ✅ Get Users
+        async function getUsers() {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*');
 
-    if (error) {
-      alert(error.message);
-    } else {
-      const list = document.getElementById("userList");
-      list.innerHTML = "";
+            if (error) {
+                document.getElementById("result").innerText = "Error: " + error.message;
+            } else {
+                document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+                console.log(data);
+            }
+        }
 
-      data.forEach(user => {
-        const li = document.createElement("li");
-        li.textContent = user.name + " - " + user.mobile;
-        list.appendChild(li);
-      });
-    }
-  }
+        // ✅ Login Function
+        async function login() {
+            const mobile = document.getElementById("mobile").value;
+            const pin = document.getElementById("pin").value;
 
-  // ✅ Login
-  async function login() {
-    const mobile = document.getElementById("loginMobile").value;
-    const pin = document.getElementById("loginPin").value;
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .eq('mobile', mobile)
+                .eq('pin', pin);
 
-    const { data, error } = await supabaseClient
-      .from('users')
-      .select('*')
-      .eq('mobile', mobile)
-      .eq('pin', pin);
-
-    if (data.length > 0) {
-      alert("Login Successful ✅");
-    } else {
-      alert("Invalid Mobile or PIN ❌");
-    }
-  }
-</script>
+            if (error) {
+                document.getElementById("result").innerText = "Error: " + error.message;
+            } else if (data.length > 0) {
+                document.getElementById("result").innerText = "Login Successful ✅";
+            } else {
+                document.getElementById("result").innerText = "Invalid Mobile or PIN ❌";
+            }
+        }
+    </script>
 
 </body>
 </html>
