@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LexControl | Advocate Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+
+    <div class="fixed left-0 top-0 h-full w-64 bg-slate-900 text-white p-6">
+        <h1 class="text-2xl font-bold mb-10 flex items-center">
+            <i class="fas fa-gavel mr-3 text-blue-400"></i> LexControl
+        </h1>
+        <nav class="space-y-4">
+            <a href="#" class="block py-2 px-4 bg-blue-600 rounded-lg"><i class="fas fa-home mr-2"></i> Dashboard</a>
+            <a href="#" class="block py-2 px-4 hover:bg-slate-800 transition"><i class="fas fa-briefcase mr-2"></i> Active Cases</a>
+            <a href="#" class="block py-2 px-4 hover:bg-slate-800 transition"><i class="fas fa-users mr-2"></i> Clients</a>
+            <a href="#" class="block py-2 px-4 hover:bg-slate-800 transition"><i class="fas fa-calendar-alt mr-2"></i> Hearings</a>
+        </nav>
+    </div>
+
+    <main class="ml-64 p-8">
+        <header class="flex justify-between items-center mb-8">
+            <h2 class="text-3xl font-semibold text-gray-800">Case Overview</h2>
+            <button id="newCaseBtn" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 shadow-lg transition">
+                + New Case Entry
+            </button>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-blue-500">
+                <p class="text-gray-500 text-sm uppercase">Total Active Cases</p>
+                <p class="text-2xl font-bold">24</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-orange-500">
+                <p class="text-gray-500 text-sm uppercase">Hearings This Week</p>
+                <p class="text-2xl font-bold">7</p>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-sm border-l-4 border-green-500">
+                <p class="text-gray-500 text-sm uppercase">Pending Invoices</p>
+                <p class="text-2xl font-bold">$4,200</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+            <table class="w-full text-left">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="p-4 font-semibold text-gray-700">Case ID</th>
+                        <th class="p-4 font-semibold text-gray-700">Client Name</th>
+                        <th class="p-4 font-semibold text-gray-700">Subject</th>
+                        <th class="p-4 font-semibold text-gray-700">Next Hearing</th>
+                        <th class="p-4 font-semibold text-gray-700">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="caseTableBody">
+                    </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Sample Data (In a real app, this comes from your FastAPI backend)
+        const cases = [
+            { id: "LXC-102", client: "John Doe", subject: "Property Dispute", date: "2026-03-20", status: "Active" },
+            { id: "LXC-105", client: "Sarah Smith", subject: "Contract Breach", date: "2026-03-22", status: "Pending" },
+            { id: "LXC-109", client: "Global Tech Inc.", subject: "IP Infringement", date: "2026-04-05", status: "Active" }
+        ];
+
+        // Function to render cases
+        function renderCases() {
+            const tableBody = document.getElementById('caseTableBody');
+            tableBody.innerHTML = cases.map(c => `
+                <tr class="border-b hover:bg-gray-50 transition">
+                    <td class="p-4 font-mono text-sm text-blue-600">${c.id}</td>
+                    <td class="p-4 font-medium">${c.client}</td>
+                    <td class="p-4">${c.subject}</td>
+                    <td class="p-4 text-gray-600">${c.date}</td>
+                    <td class="p-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                            c.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }">
+                            ${c.status}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Initialize table
+        document.addEventListener('DOMContentLoaded', renderCases);
+
+        // Simple Interaction
+        document.getElementById('newCaseBtn').addEventListener('click', () => {
+            alert("This would open a modal to link with your Python backend!");
+        });
+    </script>
+</body>
+</html>
