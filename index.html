@@ -1,52 +1,137 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Supabase Connection</title>
+  <title>Supabase Full App</title>
 
   <!-- Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f4f4;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .box {
+      background: white;
+      padding: 20px;
+      margin: 20px auto;
+      width: 300px;
+      border-radius: 10px;
+      box-shadow: 0px 0px 10px gray;
+    }
+
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 5px;
+    }
+
+    button {
+      padding: 10px 15px;
+      margin: 5px;
+      background: blue;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: darkblue;
+    }
+  </style>
 </head>
 
 <body>
 
-<h2>Supabase Test</h2>
+<h1>Supabase App</h1>
 
-<button onclick="addUser()">Add User</button>
-<button onclick="getUsers()">Get Users</button>
+<!-- Add User -->
+<div class="box">
+  <h3>Add User</h3>
+  <input id="name" placeholder="Name">
+  <input id="mobile" placeholder="Mobile">
+  <input id="pin" placeholder="PIN">
+  <button onclick="addUser()">Add User</button>
+</div>
+
+<!-- Login -->
+<div class="box">
+  <h3>Login</h3>
+  <input id="loginMobile" placeholder="Mobile">
+  <input id="loginPin" placeholder="PIN">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- View Users -->
+<div class="box">
+  <h3>View Users</h3>
+  <button onclick="getUsers()">Get Users</button>
+  <ul id="userList"></ul>
+</div>
 
 <script>
+  // ✅ Your Supabase Credentials
   const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-
   const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
 
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-  // Insert Data
+  // ✅ Add User
   async function addUser() {
+    const name = document.getElementById("name").value;
+    const mobile = document.getElementById("mobile").value;
+    const pin = document.getElementById("pin").value;
+
     const { data, error } = await supabaseClient
       .from('users')
-      .insert([
-        { name: "Dilip", mobile: "9876543210", pin: "1234" }
-      ]);
+      .insert([{ name, mobile, pin }]);
 
     if (error) {
-      console.log("Error:", error);
+      alert("Error: " + error.message);
     } else {
       alert("User Added Successfully");
     }
   }
 
-  // Fetch Data
+  // ✅ Get Users
   async function getUsers() {
     const { data, error } = await supabaseClient
       .from('users')
       .select('*');
 
     if (error) {
-      console.log(error);
+      alert(error.message);
     } else {
-      console.log(data);
-      alert("Check console (F12)");
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+
+      data.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = user.name + " - " + user.mobile;
+        list.appendChild(li);
+      });
+    }
+  }
+
+  // ✅ Login
+  async function login() {
+    const mobile = document.getElementById("loginMobile").value;
+    const pin = document.getElementById("loginPin").value;
+
+    const { data, error } = await supabaseClient
+      .from('users')
+      .select('*')
+      .eq('mobile', mobile)
+      .eq('pin', pin);
+
+    if (data.length > 0) {
+      alert("Login Successful ✅");
+    } else {
+      alert("Invalid Mobile or PIN ❌");
     }
   }
 </script>
