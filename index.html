@@ -2,11 +2,39 @@
 <html>
 <head>
     <title>Advocate CRM</title>
+
     <style>
-        body { font-family: Arial; margin: 20px; background:#f4f6f9;}
-        input, select, button { padding:8px; margin:5px; }
-        .card { background:white; padding:15px; border-radius:10px; margin-bottom:15px; }
-        .hidden { display:none; }
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background: #f4f6f9;
+        }
+
+        input, select, button {
+            padding: 8px;
+            margin: 5px 0;
+            width: 90%;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* RIGHT ALIGN LOGIN */
+        #loginDiv {
+            position: absolute;
+            right: 20px;
+            top: 60px;
+            width: 300px;
+        }
     </style>
 </head>
 
@@ -17,8 +45,8 @@
 <!-- LOGIN -->
 <div id="loginDiv" class="card">
     <h3>Login</h3>
-    <input id="mobile" placeholder="Mobile"><br>
-    <input id="pin" type="password" placeholder="PIN"><br>
+    <input id="mobile" placeholder="Mobile">
+    <input id="pin" type="password" placeholder="PIN">
     <button onclick="login()">Login</button>
 </div>
 
@@ -64,8 +92,7 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+const supabaseKey = "YOUR_KEY_HERE"; // keep your key here
 
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -75,9 +102,6 @@ async function login() {
     const pin = document.getElementById("pin").value.trim();
 
     const { data, error } = await db.from('users').select('*');
-
-    console.log("DATA:", data);
-    console.log("ERROR:", error);
 
     if (error) {
         alert("Error: " + error.message);
