@@ -133,13 +133,25 @@
     </div>
 </div>
 
+<!-- Load config from external file - DO NOT COMMIT CONFIG.JS -->
+<script src="config.js"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const supabaseUrl ="https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey ="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+// ✅ SECURITY FIX: Credentials now loaded from external config.js file
+// The config.js file should contain:
+// window.CONFIG = {
+//     SUPABASE_URL: "your_supabase_url",
+//     SUPABASE_KEY: "your_anon_key"
+// };
 
-const db = supabase.createClient(supabaseUrl, supabaseKey);
+// Validate configuration exists
+if (typeof window.CONFIG === 'undefined' || !window.CONFIG.SUPABASE_URL || !window.CONFIG.SUPABASE_KEY) {
+    alert("❌ Configuration error: Missing Supabase credentials in config.js");
+}
+
+const db = supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_KEY);
 
 // ✅ LOGIN FIXED
 async function login() {
