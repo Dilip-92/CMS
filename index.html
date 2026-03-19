@@ -47,7 +47,7 @@
             border-radius: 5px;
         }
 
-        /* SIDEBAR (NEW) */
+        /* SIDEBAR */
         .sidebar {
             position: fixed;
             left: 0;
@@ -91,7 +91,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-    <!-- SIDEBAR (NEW) -->
+    <!-- SIDEBAR -->
     <div class="sidebar">
         <h3>Menu</h3>
         <button onclick="showSection('addCase')">Add Case</button>
@@ -100,7 +100,7 @@
         <button onclick="logout()">Logout</button>
     </div>
 
-    <!-- CONTENT WRAPPER (NEW) -->
+    <!-- CONTENT -->
     <div class="content">
 
         <!-- ADD CASE -->
@@ -148,13 +148,14 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg"; // keep your same key here
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-// LOGIN (unchanged logic)
+// LOGIN (FIXED)
 async function login() {
-    const mobile = document.getElementById("mobile").value.trim();
-    const pin = document.getElementById("pin").value.trim();
+    const mobile = Number(document.getElementById("mobile").value.trim());
+    const pin = Number(document.getElementById("pin").value.trim());
 
     const { data, error } = await db.from('users').select('*');
 
@@ -173,7 +174,7 @@ async function login() {
     }
 }
 
-// SIDEBAR FUNCTIONS (NEW)
+// SIDEBAR
 function showSection(id) {
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.add("hidden");
@@ -186,7 +187,7 @@ function logout() {
     document.getElementById("loginDiv").classList.remove("hidden");
 }
 
-// ADD CASE (unchanged)
+// ADD CASE
 async function addCase() {
     const file = document.getElementById("file").files[0];
     let fileUrl = "";
@@ -219,7 +220,7 @@ async function addCase() {
     }
 }
 
-// GET CASES (unchanged)
+// GET CASES
 async function getCases() {
     let query = db.from('cases').select('*');
 
