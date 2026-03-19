@@ -47,7 +47,7 @@
             border-radius: 5px;
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR (NEW) */
         .sidebar {
             position: fixed;
             left: 0;
@@ -91,7 +91,7 @@
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-    <!-- SIDEBAR -->
+    <!-- SIDEBAR (NEW) -->
     <div class="sidebar">
         <h3>Menu</h3>
         <button onclick="showSection('addCase')">Add Case</button>
@@ -100,7 +100,7 @@
         <button onclick="logout()">Logout</button>
     </div>
 
-    <!-- CONTENT -->
+    <!-- CONTENT WRAPPER (NEW) -->
     <div class="content">
 
         <!-- ADD CASE -->
@@ -148,10 +148,10 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "YOUR_ANON_KEY";
+const supabaseKey = "YOUR_ANON_KEY"; // keep your same key here
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-// LOGIN
+// LOGIN (unchanged logic)
 async function login() {
     const mobile = document.getElementById("mobile").value.trim();
     const pin = document.getElementById("pin").value.trim();
@@ -173,7 +173,7 @@ async function login() {
     }
 }
 
-// SIDEBAR NAVIGATION
+// SIDEBAR FUNCTIONS (NEW)
 function showSection(id) {
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.add("hidden");
@@ -186,7 +186,7 @@ function logout() {
     document.getElementById("loginDiv").classList.remove("hidden");
 }
 
-// ADD CASE
+// ADD CASE (unchanged)
 async function addCase() {
     const file = document.getElementById("file").files[0];
     let fileUrl = "";
@@ -219,7 +219,7 @@ async function addCase() {
     }
 }
 
-// GET CASES
+// GET CASES (unchanged)
 async function getCases() {
     let query = db.from('cases').select('*');
 
