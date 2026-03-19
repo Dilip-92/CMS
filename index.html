@@ -149,8 +149,8 @@ async function login() {
     const { data, error } = await db
         .from('users')
         .select('*')
-        .eq('mobile', Number(mobile))   // ✅ lowercase
-        .eq('pin', Number(pin));        // ✅ lowercase
+        .eq('mobile', mobile)   // ✅ string match
+        .eq('pin', pin);        // ✅ string match
 
     if (error) {
         alert("Error: " + error.message);
@@ -158,13 +158,13 @@ async function login() {
     }
 
     if (data.length > 0) {
+        alert("Login Success ✅");
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
     } else {
         alert("Invalid Mobile or PIN ❌");
     }
 }
-
 // SIDEBAR
 function showSection(id) {
     document.querySelectorAll(".section").forEach(sec => {
