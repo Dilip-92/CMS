@@ -6,14 +6,14 @@
     <style>
         body {
             font-family: Arial;
-            margin: 20px;
+            margin: 0;
             background: #f4f6f9;
         }
 
         input, select, button {
-            padding: 4px;
-            margin: 2px 0;
-            width: 40%;
+            padding: 6px;
+            margin: 5px 0;
+            width: 90%;
         }
 
         .card {
@@ -28,105 +28,118 @@
             display: none;
         }
 
-        /* RIGHT ALIGN LOGIN */
+        /* LOGIN */
         #loginDiv {
-            position: absolute;
-            right: 20px;
-            top: 60px;
-            width: 300px;
+            width: 250px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            background-color: white;
+            text-align: center;
+        }
+
+        #loginDiv button {
+            width: 50%;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .content {
+            margin-left: 220px;
+            padding: 20px;
         }
     </style>
 </head>
 
 <body>
 
-<h2>⚖️ Advocate CRM</h2>
+<h2 style="padding:10px;">⚖️ Advocate CRM</h2>
 
 <!-- LOGIN -->
-<style>
-#loginDiv {
-    width: 250px;
-    margin: 100px auto; /* centers horizontally */
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.2);
-    background-color: white;
-    text-align: center;
-}
-
-#loginDiv input {
-    width: 90%;
-    padding: 8px;
-    margin: 10px 0;
-}
-
-#loginDiv button {
-    width: 40%;
-    padding: 10px;
-    background-color: green; /* green button */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-}
-</style>
-
 <div id="loginDiv" class="card">
     <h3>Login</h3>
     <input id="mobile" placeholder="Mobile">
     <input id="pin" type="password" placeholder="PIN">
     <button onclick="login()">Login</button>
 </div>
+
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-    <div class="card">
-        <h3>Add Case</h3>
-        <input id="client_name" placeholder="Client Name">
-        <input id="case_type" placeholder="Case Type">
-        <input id="hearing_date" type="date">
-        
-        <select id="status">
-            <option>Pending</option>
-            <option>Closed</option>
-        </select>
-
-        <input type="file" id="file">
-
-        <button onclick="addCase()">Add Case Type</button>
-    </div>
-    <div class="card">
-        <h3>Add Case</h3>
-        <input id="client_name" placeholder="Client Name">
-        <input id="case_type" placeholder="Case Type">
-        <input id="hearing_date" type="date">
-        
-        <select id="status">
-            <option>Pending</option>
-            <option>Closed</option>
-        </select>
-
-        <input type="file" id="file">
-
-        <button onclick="addCase()">Add Case</button>
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h3>Menu</h3>
+        <button onclick="showSection('addCase')">Add Case</button>
+        <button onclick="showSection('searchCase')">Search</button>
+        <button onclick="showSection('viewCase')">Cases</button>
+        <button onclick="logout()">Logout</button>
     </div>
 
+    <!-- CONTENT -->
+    <div class="content">
 
-    <div class="card">
-        <h3>Search</h3>
-        <input id="search" placeholder="Search by client">
-        <select id="filterStatus">
-            <option value="">All</option>
-            <option>Pending</option>
-            <option>Closed</option>
-        </select>
+        <!-- ADD CASE -->
+        <div id="addCase" class="card section">
+            <h3>Add Case</h3>
+            <input id="client_name" placeholder="Client Name">
+            <input id="case_type" placeholder="Case Type">
+            <input id="hearing_date" type="date">
+            
+            <select id="status">
+                <option>Pending</option>
+                <option>Closed</option>
+            </select>
 
-        <button onclick="getCases()">Search</button>
-    </div>
+            <input type="file" id="file">
 
-    <div class="card">
-        <h3>Cases</h3>
-        <pre id="output"></pre>
+            <button onclick="addCase()">Add Case</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div id="searchCase" class="card section hidden">
+            <h3>Search</h3>
+            <input id="search" placeholder="Search by client">
+            
+            <select id="filterStatus">
+                <option value="">All</option>
+                <option>Pending</option>
+                <option>Closed</option>
+            </select>
+
+            <button onclick="getCases()">Search</button>
+        </div>
+
+        <!-- VIEW CASES -->
+        <div id="viewCase" class="card section hidden">
+            <h3>Cases</h3>
+            <pre id="output"></pre>
+        </div>
+
     </div>
 
 </div>
@@ -135,7 +148,7 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg"
+const supabaseKey = "YOUR_ANON_KEY";
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
 // LOGIN
@@ -150,15 +163,27 @@ async function login() {
         return;
     }
 
-    const user = data.find(u => u.mobile === mobile && u.pin === pin);
+    const user = data.find(u => u.Mobile === mobile && u.PIN === pin);
 
     if (user) {
-        alert("Login Success ✅");
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
     } else {
         alert("Invalid Mobile or PIN ❌");
     }
+}
+
+// SIDEBAR NAVIGATION
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(sec => {
+        sec.classList.add("hidden");
+    });
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function logout() {
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginDiv").classList.remove("hidden");
 }
 
 // ADD CASE
