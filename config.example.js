@@ -1,17 +1,6 @@
-// Example Configuration Template
+// Supabase Configuration Template
 
-module.exports = {
-    // Database configuration
-    database: {
-        host: 'localhost',
-        port: 27017,
-        dbName: 'your_database_name',
-        user: 'your_username',
-        password: 'your_password'
-    },
-    // Server configuration
-    server: {
-        port: 3000,
-    },
-    // Add other configurations here
-};
+const supabaseUrl = 'https://your-supabase-url.supabase.co';
+const supabaseAnonKey = 'your-anon-key';
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
