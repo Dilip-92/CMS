@@ -1,0 +1,17 @@
+# Node.js
+node_modules/
+
+# Config files
+config.js
+.env
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.DS_Store
