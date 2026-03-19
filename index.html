@@ -1,35 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advocate CMS</title>
+
     <style>
         body {
+            font-family: Arial;
             margin: 0;
-            padding-top: 60px; /* Adjust to the height of the fixed header */
+            background: #f4f6f9;
         }
-        .header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
+
+        input, select, button {
+            padding: 6px;
+            margin: 5px 0;
+            width: 90%;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* LOGIN */
+        #loginDiv {
+            width: 250px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
             background-color: white;
-            z-index: 999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 60px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        #loginDiv button {
+            width: 50%;
+            background-color: green;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 200px;
+            height: 100%;
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background: #34495e;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .content {
+            margin-left: 220px;
+            padding: 20px;
         }
     </style>
 </head>
+
 <body>
-    <div class="header">
-        <h1>⚖️ Advocate CMS</h1>
+
+<h2 style="padding:10px;">⚖️ Advocate CRM</h2>
+
+<!-- LOGIN -->
+<div id="loginDiv" class="card">
+    <h3>Login</h3>
+    <input id="mobile" placeholder="Mobile">
+    <input id="pin" type="password" placeholder="pin">
+    <button onclick="login()">Login</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <h3>Menu</h3>
+        <button onclick="showSection('addCase')">Add Case</button>
+        <button onclick="showSection('searchCase')">Search</button>
+        <button onclick="showSection('viewCase')">Cases</button>
+        <button onclick="logout()">Logout</button>
     </div>
+
+    <!-- CONTENT -->
     <div class="content">
-        <!-- Your content goes here -->
+
+        <!-- ADD CASE -->
+        <div id="addCase" class="card section">
+            <h3>Add Case</h3>
+            <input id="client_name" placeholder="Client Name">
+            <input id="case_type" placeholder="Case Type">
+            <input id="hearing_date" type="date">
+            
+            <select id="status">
+                <option>Pending</option>
+                <option>Closed</option>
+            </select>
+
+            <input type="file" id="file">
+
+            <button onclick="addCase()">Add Case</button>
+        </div>
+
+        <!-- SEARCH -->
+        <div id="searchCase" class="card section hidden">
+            <h3>Search</h3>
+            <input id="search" placeholder="Search by client">
+            
+            <select id="filterStatus">
+                <option value="">All</option>
+                <option>Pending</option>
+                <option>Closed</option>
+            </select>
+
+            <button onclick="getCases()">Search</button>
+        </div>
+
+        <!-- VIEW CASES -->
+        <div id="viewCase" class="card section hidden">
+            <h3>Cases</h3>
+            <pre id="output"></pre>
+        </div>
+
     </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+
+const db = supabase.createClient(supabaseUrl, supabaseKey);
+
+// LOGIN
+async function login() {
+    const mobile = document.getElementById("mobile").value.trim();
+    const pin = document.getElementById("pin").value.trim();
+
+    const { data, error } = await db
+        .from('users')
+        .select('*')
+        .eq('Mobile', Number(mobile))
+        .eq('PIN', Number(pin));
+
+    if (error) {
+        alert("Error: " + error.message);
+        return;
+    }
+
+    if (data.length > 0) {
+        document.getElementById("loginDiv").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+    } else {
+        alert("Invalid Mobile or PIN ❌");
+    }
+}
+
+// SIDEBAR
+function showSection(id) {
+    document.querySelectorAll(".section").forEach(sec => {
+        sec.classList.add("hidden");
+    });
+    document.getElementById(id).classList.remove("hidden");
+}
+
+function logout() {
+    document.getElementById("dashboard").classList.add("hidden");
+    document.getElementById("loginDiv").classList.remove("hidden");
+}
+
+// ADD CASE
+async function addCase() {
+    const file = document.getElementById("file").files[0];
+    let fileUrl = "";
+
+    if (file) {
+        const { data, error } = await db.storage
+            .from('documents')
+            .upload(Date.now() + "_" + file.name, file);
+
+        if (error) {
+            alert("File upload error: " + error.message);
+            return;
+        }
+
+        fileUrl = data.path;
+    }
+
+    const { error } = await db.from('cases').insert([{
+        client_name: document.getElementById("client_name").value,
+        case_type: document.getElementById("case_type").value,
+        hearing_date: document.getElementById("hearing_date").value,
+        status: document.getElementById("status").value,
+        file_url: fileUrl
+    }]);
+
+    if (error) {
+        alert("Error: " + error.message);
+    } else {
+        alert("Case Added Successfully ✅");
+    }
+}
+
+// GET CASES
+async function getCases() {
+    let query = db.from('cases').select('*');
+
+    const search = document.getElementById("search").value.trim();
+    const status = document.getElementById("filterStatus").value;
+
+    if (search) {
+        query = query.ilike('client_name', '%' + search + '%');
+    }
+
+    if (status) {
+        query = query.eq('status', status);
+    }
+
+    const { data, error } = await query.order('hearing_date');
+
+    if (error) {
+        document.getElementById("output").innerText = "Error: " + error.message;
+    } else {
+        document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+    }
+}
+</script>
+
 </body>
-</html>
+</html>  Update My code still Im not able to login  give me final code withh all the Imaprtaent url and Annon key 
