@@ -155,7 +155,7 @@ const db = supabase.createClient(supabaseUrl, supabaseKey);
 // LOGIN
 async function login() {
     const mobile = document.getElementById("mobile").value.trim();
-    const pin = document.getElementById("pin").value.trim();
+    const pin = document
 
     const { data, error } = await db
         .from('users')
