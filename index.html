@@ -43,13 +43,40 @@
 <h2>⚖️ Advocate CRM</h2>
 
 <!-- LOGIN -->
+<style>
+#loginDiv {
+    width: 250px;
+    margin: 100px auto; /* centers horizontally */
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    background-color: white;
+    text-align: center;
+}
+
+#loginDiv input {
+    width: 90%;
+    padding: 8px;
+    margin: 10px 0;
+}
+
+#loginDiv button {
+    width: 100%;
+    padding: 10px;
+    background-color: green; /* green button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+</style>
+
 <div id="loginDiv" class="card">
     <h3>Login</h3>
     <input id="mobile" placeholder="Mobile">
     <input id="pin" type="password" placeholder="PIN">
     <button onclick="login()">Login</button>
 </div>
-
 <!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
