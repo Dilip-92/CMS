@@ -160,13 +160,22 @@ async function login() {
     const { data, error } = await db
         .from('users')
         .select('*')
-        .eq('Mobile',mobile)
-        .eq('PIN',pin);
+        .eq('mobile', mobile)   // ✅ FIXED
+        .eq('pin', pin);        // ✅ FIXED
 
     if (error) {
         alert("Error: " + error.message);
         return;
     }
+
+    if (data.length > 0) {
+        alert("Login Success ✅");
+        document.getElementById("loginDiv").classList.add("hidden");
+        document.getElementById("dashboard").classList.remove("hidden");
+    } else {
+        alert("Invalid Mobile or PIN ❌");
+    }
+}
 
     if (data.length > 0) {
         document.getElementById("loginDiv").classList.add("hidden");
