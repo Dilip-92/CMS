@@ -153,24 +153,31 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
 // LOGIN (FIXED)
+<script>
+// LOGIN (FINAL FIX - DIRECT DB MATCH)
 async function login() {
-    const mobile = Number(document.getElementById("mobile").value.trim());
-    const pin = Number(document.getElementById("pin").value.trim());
+    const mobile = document.getElementById("mobile").value.trim();
+    const pin = document.getElementById("pin").value.trim();
 
-    const { data, error } = await db.from('users').select('*');
+    const { data, error } = await db
+        .from('users')
+        .select('*')
+        .eq('Mobile', Number(mobile))  // ✅ exact match
+        .eq('PIN', Number(pin));       // ✅ exact match
 
     if (error) {
         alert("Error: " + error.message);
         return;
     }
 
-    const user = data.find(u => u.Mobile === mobile && u.PIN === pin);
-
-    if (user) {
+    if (data.length > 0) {
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
     } else {
         alert("Invalid Mobile or PIN ❌");
+    }
+}
+</script>
     }
 }
 
