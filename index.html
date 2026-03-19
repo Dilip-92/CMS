@@ -160,8 +160,8 @@ async function login() {
     const { data, error } = await db
         .from('users')
         .select('*')
-        .eq('Mobile', Number(mobile))
-        .eq('PIN', Number(pin));
+        .eq('Mobile',mobile)
+        .eq('PIN',pin);
 
     if (error) {
         alert("Error: " + error.message);
@@ -248,4 +248,4 @@ async function getCases() {
 </script>
 
 </body>
-</html>  Update My code still Im not able to login  give me final code withh all the Imaprtaent url and Annon key 
+</html>  
