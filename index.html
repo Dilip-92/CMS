@@ -28,7 +28,6 @@
             display: none;
         }
 
-        /* LOGIN */
         #loginDiv {
             width: 250px;
             margin: 100px auto;
@@ -47,7 +46,6 @@
             border-radius: 5px;
         }
 
-        /* SIDEBAR */
         .sidebar {
             position: fixed;
             left: 0;
@@ -80,7 +78,6 @@
 
 <h2 style="padding:10px;">⚖️ Advocate CRM</h2>
 
-<!-- LOGIN -->
 <div id="loginDiv" class="card">
     <h3>Login</h3>
     <input id="mobile" placeholder="Mobile">
@@ -88,10 +85,8 @@
     <button onclick="login()">Login</button>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-    <!-- SIDEBAR -->
     <div class="sidebar">
         <h3>Menu</h3>
         <button onclick="showSection('addCase')">Add Case</button>
@@ -100,10 +95,8 @@
         <button onclick="logout()">Logout</button>
     </div>
 
-    <!-- CONTENT -->
     <div class="content">
 
-        <!-- ADD CASE -->
         <div id="addCase" class="card section">
             <h3>Add Case</h3>
             <input id="client_name" placeholder="Client Name">
@@ -116,11 +109,9 @@
             </select>
 
             <input type="file" id="file">
-
             <button onclick="addCase()">Add Case</button>
         </div>
 
-        <!-- SEARCH -->
         <div id="searchCase" class="card section hidden">
             <h3>Search</h3>
             <input id="search" placeholder="Search by client">
@@ -134,25 +125,23 @@
             <button onclick="getCases()">Search</button>
         </div>
 
-        <!-- VIEW CASES -->
         <div id="viewCase" class="card section hidden">
             <h3>Cases</h3>
             <pre id="output"></pre>
         </div>
 
     </div>
-
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OT93366227.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
 
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-// LOGIN
+// ✅ LOGIN FIXED
 async function login() {
     const mobile = document.getElementById("mobile").value.trim();
     const pin = document.getElementById("pin").value.trim();
@@ -160,8 +149,8 @@ async function login() {
     const { data, error } = await db
         .from('users')
         .select('*')
-        .eq('Mobile', Number(mobile))
-        .eq('PIN', Number(pin));
+        .eq('mobile', Number(mobile))   // ✅ lowercase
+        .eq('pin', Number(pin));        // ✅ lowercase
 
     if (error) {
         alert("Error: " + error.message);
