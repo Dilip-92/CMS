@@ -1,159 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-  <title>LexForge | Advocate Case Management Suite</title>
-  <!-- Google Fonts & Font Awesome -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Supabase JS Library -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
-    }
-
-    body {
-      background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
-      min-height: 100vh;
-    }
-
-    .glass-card {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(2px);
-      border-radius: 32px;
-      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0,0,0,0.02);
-      border: 1px solid rgba(255,255,255,0.6);
-    }
-
-    .btn-primary {
-      background: #1e3a8a;
-      transition: all 0.2s ease;
-      color: white;
-      font-weight: 600;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 40px;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    }
-    .btn-primary:hover {
-      background: #0f2b6d;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(30,58,138,0.2);
-    }
-    .btn-secondary {
-      background: #f0f2f5;
-      color: #1f2937;
-      border: 1px solid #e2e8f0;
-      font-weight: 500;
-    }
-    .btn-secondary:hover {
-      background: #e6e9ef;
-    }
-    input, select, textarea {
-      border: 1px solid #e2e8f0;
-      border-radius: 20px;
-      padding: 10px 16px;
-      width: 100%;
-      font-size: 0.9rem;
-      transition: 0.2s;
-      background: white;
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
-    }
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 40px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      display: inline-block;
-    }
-    .status-active { background: #dcfce7; color: #15803d; }
-    .status-pending { background: #fff3e3; color: #b45309; }
-    .status-closed { background: #f1f5f9; color: #334155; }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 14px 8px;
-      border-bottom: 1px solid #edf2f7;
-    }
-    th {
-      font-weight: 600;
-      color: #1e293b;
-    }
-    .modal-overlay {
-      position: fixed;
-      top:0; left:0;
-      width:100%; height:100%;
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-    }
-    .modal-container {
-      background: white;
-      max-width: 550px;
-      width: 90%;
-      border-radius: 32px;
-      padding: 28px;
-    }
-    @media (max-width: 768px) {
-      .flex-responsive { flex-direction: column; gap: 1rem; }
-      th, td { font-size: 0.8rem; padding: 10px 4px; }
-    }
-    .toast-notification {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #1e3a8a;
-      color: white;
-      padding: 12px 24px;
-      border-radius: 40px;
-      z-index: 1100;
-      animation: slideIn 0.3s ease;
-    }
-    @keyframes slideIn {
-      from { transform: translateX(100%); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    .loading {
-      text-align: center;
-      padding: 40px;
-      color: #666;
-    }
-    .info-message {
-      background: #e0f2fe;
-      border-left: 4px solid #0284c7;
-      padding: 12px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-      font-size: 0.85rem;
-      color: #0c4a6e;
-    }
-  </style>
-</head>
-<body>
-
-<div id="app">
-  <div class="loading">
-    <i class="fas fa-spinner fa-spin fa-2x"></i>
-    <p>Initializing application...</p>
-  </div>
-</div>
-
 <script>
   // ==================== CONFIGURATION ====================
   const SUPABASE_URL = "https://nkkhaxjmbjyaerycdobr.supabase.co";
@@ -167,7 +11,7 @@
   let hearingsList = [];
   let editingCase = null;
   let editingHearing = null;
-  let pendingEmail = null; // Track email for resend confirmation
+  let pendingEmail = null;
   
   function showToast(message, isError = false, duration = 3000) {
     const toast = document.createElement('div');
@@ -180,17 +24,19 @@
   
   function initSupabase() {
     try {
+      console.log("🔧 Creating Supabase client...");
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
           detectSessionInUrl: true,
-          flowType: 'pkce' // Required for email confirmation redirect
+          flowType: 'pkce'
         }
       });
+      console.log("✅ Supabase client created");
       return true;
     } catch (error) {
-      console.error("Supabase init error:", error);
+      console.error("❌ Supabase init error:", error);
       showToast(error.message, true);
       return false;
     }
@@ -199,16 +45,19 @@
   async function checkSession() {
     if (!supabaseClient) return null;
     try {
+      console.log("🔍 Checking session...");
       const { data: { session }, error } = await supabaseClient.auth.getSession();
       if (error) {
         console.error("Session error:", error);
         return null;
       }
       if (session) {
+        console.log("✅ Session found for user:", session.user.email);
         currentUser = session.user;
         await fetchUserProfile();
         return currentUser;
       }
+      console.log("ℹ️ No active session");
       return null;
     } catch (error) {
       console.error("Session exception:", error);
@@ -227,8 +76,6 @@
       
       if (!error && data) {
         currentUser.user_metadata = { ...currentUser.user_metadata, full_name: data.full_name };
-      } else if (error && error.code !== 'PGRST116') {
-        console.error("Profile fetch error:", error);
       }
     } catch (error) {
       console.error("Profile fetch exception:", error);
@@ -279,6 +126,7 @@
     
     try {
       if (isSignUp) {
+        console.log("📝 Signing up:", email);
         const { data, error } = await supabaseClient.auth.signUp({
           email, 
           password,
@@ -291,23 +139,16 @@
         if (error) throw error;
         
         if (data.user) {
-          // Store email for potential resend
           pendingEmail = email;
-          
-          // Create profile immediately (will be accessible after confirmation)
           await createUserProfile(data.user.id, fullName);
-          
-          // Show confirmation message
           showToast("✅ Account created! Please check your email to confirm your account before logging in.", false, 6000);
           
-          // Clear signup form
           if (document.getElementById("signup-name")) {
             document.getElementById("signup-name").value = "";
             document.getElementById("signup-email").value = "";
             document.getElementById("signup-password").value = "";
           }
           
-          // Switch to login tab
           setTimeout(() => {
             const loginTab = document.getElementById("tab-login-btn");
             if (loginTab) loginTab.click();
@@ -315,13 +156,13 @@
         }
         return false;
       } else {
+        console.log("🔐 Logging in:", email);
         const { data, error } = await supabaseClient.auth.signInWithPassword({ 
           email, 
           password 
         });
         
         if (error) {
-          // Handle specific error cases
           if (error.message.includes("Email not confirmed")) {
             pendingEmail = email;
             showToast("⚠️ Please confirm your email address before logging in. Check your inbox (and spam folder) for the confirmation link.", true, 6000);
@@ -336,14 +177,12 @@
         
         currentUser = data.user;
         
-        // Double-check email confirmation
         if (!currentUser.confirmed_at) {
           showToast("Please confirm your email before logging in. Check your inbox.", true);
           await supabaseClient.auth.signOut();
           return false;
         }
         
-        // Ensure profile exists
         await fetchUserProfile();
         if (!currentUser.user_metadata?.full_name) {
           await createUserProfile(currentUser.id, currentUser.email.split('@')[0]);
@@ -358,13 +197,7 @@
       }
     } catch (err) {
       console.error("Login error:", err);
-      let errorMessage = err.message;
-      if (err.message.includes("Email not confirmed")) {
-        errorMessage = "Please confirm your email before logging in. Check your spam folder if you don't see the confirmation email.";
-      } else if (err.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password";
-      }
-      showToast(errorMessage, true);
+      showToast(err.message, true);
       return false;
     }
   }
@@ -590,7 +423,6 @@
       if(email && pwd) {
         const success = await handleLogin(email, pwd, false);
         if (!success) {
-          // Show resend button if login failed (likely due to unconfirmed email)
           document.getElementById("resend-section").style.display = "block";
         }
       } else {
@@ -801,4 +633,98 @@
       if(!caseId || !hearingDate) { showToast("Case and Hearing date required", true); return; }
       await saveHearing({
         case_id: caseId,
-        hearing_date
+        hearing_date: hearingDate,
+        hearing_notes: document.getElementById("hearing_notes").value,
+      });
+    };
+  }
+  
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
+    editingCase = null;
+    editingHearing = null;
+  }
+  
+  function formatDate(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-IN'); }
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  function escapeAttr(str) { if(!str) return ''; return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+  
+  // ==================== APP INIT WITH DEBUGGING ====================
+  (async () => {
+    console.log("🚀 App starting...");
+    
+    // Add timeout indicator
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      if (elapsed >= 5) {
+        console.log(`⏱️ Still initializing... ${elapsed} seconds`);
+        const appDiv = document.getElementById("app");
+        if (appDiv && appDiv.innerHTML.includes("Initializing application")) {
+          appDiv.innerHTML = `
+            <div class="p-8 text-center">
+              <div class="text-yellow-600 mb-4">
+                <i class="fas fa-spinner fa-spin fa-3x"></i>
+              </div>
+              <h3 class="text-xl font-bold mb-2">Still Loading...</h3>
+              <p class="text-gray-600">This is taking longer than expected (${elapsed} seconds).</p>
+              <button onclick="location.reload()" class="btn-primary mt-4">Refresh Page</button>
+              <div class="mt-4 text-sm text-left bg-gray-100 p-4 rounded">
+                <strong>Debug Info:</strong><br>
+                Check browser console (F12) for errors<br>
+                Supabase URL: ${SUPABASE_URL ? '✓ Set' : '✗ Missing'}<br>
+                Anon Key: ${SUPABASE_ANON_KEY ? '✓ Set' : '✗ Missing'}<br>
+                Time elapsed: ${elapsed} seconds
+              </div>
+            </div>
+          `;
+        }
+      }
+    }, 1000);
+    
+    try {
+      console.log("1️⃣ Initializing Supabase...");
+      const initSuccess = initSupabase();
+      if (!initSuccess) {
+        throw new Error("Supabase initialization failed");
+      }
+      console.log("✅ Supabase initialized");
+      
+      console.log("2️⃣ Checking session...");
+      const user = await checkSession();
+      console.log("Session check result:", user ? "Logged in" : "Not logged in");
+      
+      if (user) {
+        console.log("3️⃣ Loading data...");
+        await loadCases();
+        await loadHearings();
+        console.log("4️⃣ Rendering dashboard...");
+        renderDashboard();
+      } else {
+        console.log("4️⃣ Rendering login screen...");
+        renderLoginScreen();
+      }
+      
+      clearInterval(interval);
+      console.log("✅ App initialized successfully in " + Math.floor((Date.now() - startTime) / 1000) + " seconds!");
+      
+    } catch (error) {
+      console.error("❌ Initialization error:", error);
+      clearInterval(interval);
+      document.getElementById("app").innerHTML = `
+        <div class="min-h-screen flex items-center justify-center p-5">
+          <div class="glass-card w-full max-w-md p-8 text-center">
+            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Initialization Failed</h2>
+            <p class="text-gray-600 mb-4">${error.message}</p>
+            <div class="bg-red-50 p-4 rounded-lg mb-4 text-left text-sm">
+              <strong>Error Details:</strong><br>
+              ${error.stack || error.toString()}
+            </div>
+            <button onclick="location.reload()" class="btn-primary w-full">Retry</button>
+          </div>
+        </div>
+      `;
+    }
+  })();
+</script>
