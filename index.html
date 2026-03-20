@@ -47,31 +47,82 @@
             border-radius: 5px;
         }
 
-        /* SIDEBAR */
+        /* SIDEBAR PREMIUM */
         .sidebar {
             position: fixed;
             left: 0;
             top: 0;
-            width: 200px;
+            width: 220px;
             height: 100%;
             background: #2c3e50;
             color: white;
-            padding: 20px;
+            padding: 15px;
+            transition: 0.3s;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
         }
 
         .sidebar button {
             width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            background: #34495e;
+            padding: 12px;
+            margin: 8px 0;
+            background: transparent;
             color: white;
             border: none;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             cursor: pointer;
+            border-radius: 5px;
+            transition: 0.2s;
+        }
+
+        .sidebar button:hover {
+            background: #1abc9c;
+        }
+
+        .menu-text {
+            transition: 0.3s;
+        }
+
+        .sidebar.collapsed .menu-text {
+            display: none;
+        }
+
+        .logo-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-box img {
+            width: 70px;
+            height: 70px;
+        }
+
+        .sidebar.collapsed .logo-box img {
+            width: 40px;
+            height: 40px;
+        }
+
+        .toggle-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 15px;
+            width: 80%;
+            background: #16a085;
         }
 
         .content {
-            margin-left: 220px;
+            margin-left: 240px;
             padding: 20px;
+            transition: 0.3s;
+        }
+
+        .sidebar.collapsed ~ .content {
+            margin-left: 90px;
         }
     </style>
 </head>
@@ -92,18 +143,40 @@
 <div id="dashboard" class="hidden">
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
-        <h3>Menu</h3>
-        <button onclick="showSection('addCase')">Add Case</button>
-        <button onclick="showSection('searchCase')">Search</button>
-        <button onclick="showSection('viewCase')">Cases</button>
-        <button onclick="logout()">Logout</button>
+    <div class="sidebar" id="sidebar">
+
+        <div class="logo-box">
+            <img src="logo.png" alt="Logo">
+            <h3 class="menu-text">Advocate CRM</h3>
+        </div>
+
+        <button onclick="showSection('addCase')">
+            <span>📁</span>
+            <span class="menu-text">Add Case</span>
+        </button>
+
+        <button onclick="showSection('searchCase')">
+            <span>🔍</span>
+            <span class="menu-text">Search</span>
+        </button>
+
+        <button onclick="showSection('viewCase')">
+            <span>📄</span>
+            <span class="menu-text">Cases</span>
+        </button>
+
+        <button onclick="logout()">
+            <span>🚪</span>
+            <span class="menu-text">Logout</span>
+        </button>
+
+        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
+
     </div>
 
     <!-- CONTENT -->
     <div class="content">
 
-        <!-- ADD CASE -->
         <div id="addCase" class="card section">
             <h3>Add Case</h3>
             <input id="client_name" placeholder="Client Name">
@@ -120,7 +193,6 @@
             <button onclick="addCase()">Add Case</button>
         </div>
 
-        <!-- SEARCH -->
         <div id="searchCase" class="card section hidden">
             <h3>Search</h3>
             <input id="search" placeholder="Search by client">
@@ -134,7 +206,6 @@
             <button onclick="getCases()">Search</button>
         </div>
 
-        <!-- VIEW CASES -->
         <div id="viewCase" class="card section hidden">
             <h3>Cases</h3>
             <pre id="output"></pre>
@@ -148,7 +219,7 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg"; // 🔁 Replace with your ANON key
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
 
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -177,7 +248,12 @@ async function login() {
     }
 }
 
-// SIDEBAR
+// SIDEBAR TOGGLE
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("collapsed");
+}
+
+// SECTION SWITCH
 function showSection(id) {
     document.querySelectorAll(".section").forEach(sec => {
         sec.classList.add("hidden");
@@ -185,6 +261,7 @@ function showSection(id) {
     document.getElementById(id).classList.remove("hidden");
 }
 
+// LOGOUT
 function logout() {
     document.getElementById("dashboard").classList.add("hidden");
     document.getElementById("loginDiv").classList.remove("hidden");
@@ -223,7 +300,6 @@ async function addCase() {
     } else {
         alert("Case Added Successfully ✅");
 
-        // Clear fields
         document.getElementById("client_name").value = "";
         document.getElementById("case_type").value = "";
         document.getElementById("hearing_date").value = "";
