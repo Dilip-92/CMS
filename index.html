@@ -1,137 +1,117 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Advocate CMS</title>
+<title>Advocate CMS</title>
 
-    <style>
-        body {
-            font-family: Arial;
-            margin: 0;
-            background: #f4f6f9;
-        }
+<style>
+body {
+    font-family: Arial;
+    margin: 0;
+    background: #f4f6f9;
+}
 
-        input, select, button {
-            padding: 6px;
-            margin: 5px 0;
-            width: 90%;
-        }
+input, select, button {
+    padding: 6px;
+    margin: 5px 0;
+    width: 90%;
+}
 
-        .card {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 
-        .hidden {
-            display: none;
-        }
+.hidden { display: none; }
 
-        /* LOGIN */
-        #loginDiv {
-            width: 250px;
-            margin: 100px auto;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            background-color: white;
-            text-align: center;
-        }
+/* LOGIN */
+#loginDiv {
+    width: 250px;
+    margin: 100px auto;
+    padding: 20px;
+    text-align: center;
+    background: white;
+    border-radius: 8px;
+}
 
-        #loginDiv button {
-            width: 50%;
-            background-color: green;
-            color: white;
-            border: none;
-            border-radius: 5px;
-        }
+/* SIDEBAR */
+.sidebar {
+    position: fixed;
+    width: 220px;
+    height: 100%;
+    background: #2c3e50;
+    color: white;
+    padding: 15px;
+    transition: 0.3s;
+}
 
-        /* SIDEBAR PREMIUM */
-        .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 220px;
-            height: 100%;
-            background: #2c3e50;
-            color: white;
-            padding: 15px;
-            transition: 0.3s;
-        }
+.sidebar.collapsed { width: 70px; }
 
-        .sidebar.collapsed {
-            width: 70px;
-        }
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    background: transparent;
+    color: white;
+    border: none;
+    text-align: left;
+    display: flex;
+    gap: 10px;
+    cursor: pointer;
+}
 
-        .sidebar button {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: transparent;
-            color: white;
-            border: none;
-            text-align: left;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: 0.2s;
-        }
+.sidebar button:hover { background: #1abc9c; }
 
-        .sidebar button:hover {
-            background: #1abc9c;
-        }
+.menu-text { }
+.sidebar.collapsed .menu-text { display: none; }
 
-        .menu-text {
-            transition: 0.3s;
-        }
+.logo-box {
+    text-align: center;
+    margin-bottom: 20px;
+}
 
-        .sidebar.collapsed .menu-text {
-            display: none;
-        }
+.logo-box img {
+    width: 60px;
+}
 
-        .logo-box {
-            text-align: center;
-            margin-bottom: 20px;
-        }
+/* CONTENT */
+.content {
+    margin-left: 240px;
+    padding: 20px;
+}
 
-        .logo-box img {
-            width: 70px;
-            height: 70px;
-        }
+.sidebar.collapsed ~ .content {
+    margin-left: 90px;
+}
 
-        .sidebar.collapsed .logo-box img {
-            width: 40px;
-            height: 40px;
-        }
+/* TABLE */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-        .toggle-btn {
-            position: absolute;
-            bottom: 20px;
-            left: 15px;
-            width: 80%;
-            background: #16a085;
-        }
+th, td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
 
-        .content {
-            margin-left: 240px;
-            padding: 20px;
-            transition: 0.3s;
-        }
+th { background: #eee; }
 
-        .sidebar.collapsed ~ .content {
-            margin-left: 90px;
-        }
-    </style>
+.action-btn {
+    padding: 4px 8px;
+    margin-right: 5px;
+    cursor: pointer;
+}
+</style>
 </head>
 
 <body>
 
 <h2 style="padding:10px;">⚖️ Advocate CRM</h2>
 
-<!-- LOGIN -->
 <div id="loginDiv" class="card">
     <h3>Login</h3>
     <input id="mobile" placeholder="Mobile">
@@ -139,80 +119,55 @@
     <button onclick="login()">Login</button>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard" class="hidden">
 
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-
-        <div class="logo-box">
-            <img src="logo.png" alt="Logo">
-            <h3 class="menu-text">Advocate CRM</h3>
-        </div>
-
-        <button onclick="showSection('addCase')">
-            <span>📁</span>
-            <span class="menu-text">Add Case</span>
-        </button>
-
-        <button onclick="showSection('searchCase')">
-            <span>🔍</span>
-            <span class="menu-text">Search</span>
-        </button>
-
-        <button onclick="showSection('viewCase')">
-            <span>📄</span>
-            <span class="menu-text">Cases</span>
-        </button>
-
-        <button onclick="logout()">
-            <span>🚪</span>
-            <span class="menu-text">Logout</span>
-        </button>
-
-        <button class="toggle-btn" onclick="toggleSidebar()">☰</button>
-
+<div class="sidebar" id="sidebar">
+    <div class="logo-box">
+        <img src="logo.png">
+        <h3 class="menu-text">Advocate CRM</h3>
     </div>
 
-    <!-- CONTENT -->
-    <div class="content">
+    <button onclick="showSection('addCase')">📁 <span class="menu-text">Add</span></button>
+    <button onclick="showSection('viewCase')">📄 <span class="menu-text">Cases</span></button>
+    <button onclick="logout()">🚪 <span class="menu-text">Logout</span></button>
+    <button onclick="toggleSidebar()">☰</button>
+</div>
 
-        <div id="addCase" class="card section">
-            <h3>Add Case</h3>
-            <input id="client_name" placeholder="Client Name">
-            <input id="case_type" placeholder="Case Type">
-            <input id="hearing_date" type="date">
-            
-            <select id="status">
-                <option>Pending</option>
-                <option>Closed</option>
-            </select>
+<div class="content">
 
-            <input type="file" id="file">
+<div id="addCase" class="card section">
+    <h3>Add Case</h3>
+    <input id="client_name" placeholder="Client Name">
+    <input id="case_type" placeholder="Case Type">
+    <input id="hearing_date" type="date">
 
-            <button onclick="addCase()">Add Case</button>
-        </div>
+    <select id="status">
+        <option>Pending</option>
+        <option>Closed</option>
+    </select>
 
-        <div id="searchCase" class="card section hidden">
-            <h3>Search</h3>
-            <input id="search" placeholder="Search by client">
-            
-            <select id="filterStatus">
-                <option value="">All</option>
-                <option>Pending</option>
-                <option>Closed</option>
-            </select>
+    <button onclick="addCase()">Add Case</button>
+</div>
 
-            <button onclick="getCases()">Search</button>
-        </div>
+<div id="viewCase" class="card section hidden">
+    <h3>Cases</h3>
 
-        <div id="viewCase" class="card section hidden">
-            <h3>Cases</h3>
-            <pre id="output"></pre>
-        </div>
+    <table>
+        <thead>
+            <tr>
+                <th>Client</th>
+                <th>Type</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="caseTable"></tbody>
+    </table>
 
-    </div>
+</div>
 
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -223,111 +178,86 @@ const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
-// LOGIN
 async function login() {
-    const mobile = document.getElementById("mobile").value.trim();
-    const pin = document.getElementById("pin").value.trim();
+    const mobile = document.getElementById("mobile").value;
+    const pin = document.getElementById("pin").value;
 
-    const { data, error } = await db
-        .from('users')
+    const { data } = await db.from('users')
         .select('*')
         .eq('mobile', mobile)
         .eq('pin', pin);
 
-    if (error) {
-        alert("Error: " + error.message);
-        return;
-    }
-
-    if (data.length > 0) {
-        alert("Login Success ✅");
+    if (data.length) {
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
+        getCases();
     } else {
-        alert("Invalid Mobile or PIN ❌");
+        alert("Invalid Login");
     }
 }
 
-// SIDEBAR TOGGLE
 function toggleSidebar() {
     document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-// SECTION SWITCH
 function showSection(id) {
-    document.querySelectorAll(".section").forEach(sec => {
-        sec.classList.add("hidden");
-    });
+    document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
     document.getElementById(id).classList.remove("hidden");
 }
 
-// LOGOUT
 function logout() {
-    document.getElementById("dashboard").classList.add("hidden");
-    document.getElementById("loginDiv").classList.remove("hidden");
+    location.reload();
 }
 
-// ADD CASE
+// ADD
 async function addCase() {
-    const file = document.getElementById("file").files[0];
-    let fileUrl = "";
-
-    if (file) {
-        const fileName = Date.now() + "_" + file.name;
-
-        const { data, error } = await db.storage
-            .from('documents')
-            .upload(fileName, file);
-
-        if (error) {
-            alert("File upload error: " + error.message);
-            return;
-        }
-
-        fileUrl = data.path;
-    }
-
-    const { error } = await db.from('cases').insert([{
-        client_name: document.getElementById("client_name").value,
-        case_type: document.getElementById("case_type").value,
-        hearing_date: document.getElementById("hearing_date").value,
-        status: document.getElementById("status").value,
-        file_url: fileUrl
+    await db.from('cases').insert([{
+        client_name: client_name.value,
+        case_type: case_type.value,
+        hearing_date: hearing_date.value,
+        status: status.value
     }]);
 
-    if (error) {
-        alert("Error: " + error.message);
-    } else {
-        alert("Case Added Successfully ✅");
-
-        document.getElementById("client_name").value = "";
-        document.getElementById("case_type").value = "";
-        document.getElementById("hearing_date").value = "";
-    }
+    alert("Added");
+    getCases();
 }
 
-// GET CASES
+// GET
 async function getCases() {
-    let query = db.from('cases').select('*');
+    const { data } = await db.from('cases').select('*');
 
-    const search = document.getElementById("search").value.trim();
-    const status = document.getElementById("filterStatus").value;
+    let html = "";
 
-    if (search) {
-        query = query.ilike('client_name', '%' + search + '%');
-    }
+    data.forEach(c => {
+        html += `
+        <tr>
+            <td>${c.client_name}</td>
+            <td>${c.case_type}</td>
+            <td>${c.hearing_date}</td>
+            <td>${c.status}</td>
+            <td>
+                <button class="action-btn" onclick="editCase('${c.id}')">Edit</button>
+                <button class="action-btn" onclick="deleteCase('${c.id}')">Delete</button>
+            </td>
+        </tr>`;
+    });
 
-    if (status) {
-        query = query.eq('status', status);
-    }
+    caseTable.innerHTML = html;
+}
 
-    const { data, error } = await query.order('hearing_date');
+// DELETE
+async function deleteCase(id) {
+    await db.from('cases').delete().eq('id', id);
+    getCases();
+}
 
-    if (error) {
-        document.getElementById("output").innerText = "Error: " + error.message;
-    } else {
-        document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-    }
+// EDIT
+async function editCase(id) {
+    const name = prompt("Enter new client name");
+    if (!name) return;
+
+    await db.from('cases').update({ client_name: name }).eq('id', id);
+    getCases();
 }
 </script>
 
