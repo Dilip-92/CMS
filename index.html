@@ -134,6 +134,15 @@
       padding: 40px;
       color: #666;
     }
+    .info-message {
+      background: #e0f2fe;
+      border-left: 4px solid #0284c7;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: #0c4a6e;
+    }
   </style>
 </head>
 <body>
@@ -158,49 +167,41 @@
   let hearingsList = [];
   let editingCase = null;
   let editingHearing = null;
-  let isInitialized = false;
+  let pendingEmail = null; // Track email for resend confirmation
   
-  // Helper: Show toast message
-  function showToast(message, isError = false) {
+  function showToast(message, isError = false, duration = 3000) {
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.style.backgroundColor = isError ? '#dc2626' : '#1e3a8a';
     toast.innerHTML = message;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
+    setTimeout(() => toast.remove(), duration);
   }
   
-  // Initialize Supabase
   function initSupabase() {
     try {
-      if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
-        throw new Error("Please update SUPABASE_URL");
-      }
-      if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
-        throw new Error("Please set your Supabase anon key");
-      }
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           autoRefreshToken: true,
           persistSession: true,
-          detectSessionInUrl: true
+          detectSessionInUrl: true,
+          flowType: 'pkce' // Required for email confirmation redirect
         }
       });
       return true;
     } catch (error) {
-      console.error("Supabase initialization error:", error);
+      console.error("Supabase init error:", error);
       showToast(error.message, true);
       return false;
     }
   }
   
-  // Check session with better error handling
   async function checkSession() {
     if (!supabaseClient) return null;
     try {
       const { data: { session }, error } = await supabaseClient.auth.getSession();
       if (error) {
-        console.error("Session check error:", error);
+        console.error("Session error:", error);
         return null;
       }
       if (session) {
@@ -210,7 +211,7 @@
       }
       return null;
     } catch (error) {
-      console.error("Session check exception:", error);
+      console.error("Session exception:", error);
       return null;
     }
   }
@@ -222,16 +223,163 @@
         .from('profiles')
         .select('full_name')
         .eq('id', currentUser.id)
-        .single();
+        .maybeSingle();
+      
       if (!error && data) {
         currentUser.user_metadata = { ...currentUser.user_metadata, full_name: data.full_name };
+      } else if (error && error.code !== 'PGRST116') {
+        console.error("Profile fetch error:", error);
       }
     } catch (error) {
-      console.error("Profile fetch error:", error);
+      console.error("Profile fetch exception:", error);
     }
   }
   
-  // ==================== CASES CRUD ====================
+  async function createUserProfile(userId, fullName) {
+    try {
+      const { error } = await supabaseClient
+        .from('profiles')
+        .insert([{ id: userId, full_name: fullName }]);
+      
+      if (error && error.code !== '23505') {
+        console.error("Profile creation error:", error);
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Profile creation exception:", error);
+      return false;
+    }
+  }
+  
+  async function resendConfirmationEmail(email) {
+    if (!supabaseClient || !email) return;
+    
+    try {
+      const { error } = await supabaseClient.auth.resend({
+        type: 'signup',
+        email: email,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+      showToast("✅ Confirmation email resent! Please check your inbox (and spam folder).", false, 5000);
+    } catch (error) {
+      showToast("Error resending confirmation: " + error.message, true);
+    }
+  }
+  
+  async function handleLogin(email, password, isSignUp = false, fullName = "") {
+    if (!supabaseClient) {
+      showToast("Supabase not initialized", true);
+      return false;
+    }
+    
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email, 
+          password,
+          options: { 
+            data: { full_name: fullName },
+            emailRedirectTo: window.location.origin
+          }
+        });
+        
+        if (error) throw error;
+        
+        if (data.user) {
+          // Store email for potential resend
+          pendingEmail = email;
+          
+          // Create profile immediately (will be accessible after confirmation)
+          await createUserProfile(data.user.id, fullName);
+          
+          // Show confirmation message
+          showToast("✅ Account created! Please check your email to confirm your account before logging in.", false, 6000);
+          
+          // Clear signup form
+          if (document.getElementById("signup-name")) {
+            document.getElementById("signup-name").value = "";
+            document.getElementById("signup-email").value = "";
+            document.getElementById("signup-password").value = "";
+          }
+          
+          // Switch to login tab
+          setTimeout(() => {
+            const loginTab = document.getElementById("tab-login-btn");
+            if (loginTab) loginTab.click();
+          }, 1000);
+        }
+        return false;
+      } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ 
+          email, 
+          password 
+        });
+        
+        if (error) {
+          // Handle specific error cases
+          if (error.message.includes("Email not confirmed")) {
+            pendingEmail = email;
+            showToast("⚠️ Please confirm your email address before logging in. Check your inbox (and spam folder) for the confirmation link.", true, 6000);
+            return false;
+          }
+          if (error.message.includes("Invalid login credentials")) {
+            showToast("Invalid email or password. Please try again.", true);
+            return false;
+          }
+          throw error;
+        }
+        
+        currentUser = data.user;
+        
+        // Double-check email confirmation
+        if (!currentUser.confirmed_at) {
+          showToast("Please confirm your email before logging in. Check your inbox.", true);
+          await supabaseClient.auth.signOut();
+          return false;
+        }
+        
+        // Ensure profile exists
+        await fetchUserProfile();
+        if (!currentUser.user_metadata?.full_name) {
+          await createUserProfile(currentUser.id, currentUser.email.split('@')[0]);
+          await fetchUserProfile();
+        }
+        
+        await loadCases();
+        await loadHearings();
+        renderDashboard();
+        showToast(`Welcome back, ${currentUser.user_metadata?.full_name || currentUser.email}`);
+        return true;
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      let errorMessage = err.message;
+      if (err.message.includes("Email not confirmed")) {
+        errorMessage = "Please confirm your email before logging in. Check your spam folder if you don't see the confirmation email.";
+      } else if (err.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password";
+      }
+      showToast(errorMessage, true);
+      return false;
+    }
+  }
+  
+  async function handleLogout() {
+    if (supabaseClient) {
+      await supabaseClient.auth.signOut();
+    }
+    currentUser = null;
+    casesList = [];
+    hearingsList = [];
+    renderLoginScreen();
+    showToast("Logged out successfully");
+  }
+  
   async function loadCases() {
     if (!currentUser || !supabaseClient) return;
     try {
@@ -240,11 +388,12 @@
         .select('*')
         .eq('user_id', currentUser.id)
         .order('created_at', { ascending: false });
+      
       if (!error) {
         casesList = data || [];
       } else {
         console.error("Load cases error:", error);
-        if (error.message.includes("JWT")) {
+        if (error.message.includes("JWT") || error.message.includes("401")) {
           showToast("Session expired. Please login again.", true);
           await handleLogout();
         }
@@ -252,7 +401,7 @@
     } catch (error) {
       console.error("Load cases exception:", error);
     }
-    renderDashboard();
+    if (activeTab === 'cases') renderDashboard();
   }
   
   async function loadHearings() {
@@ -263,15 +412,16 @@
         .select('*, cases(case_title, case_number)')
         .eq('user_id', currentUser.id)
         .order('hearing_date', { ascending: false });
+      
       if (!error) {
         hearingsList = data || [];
       } else {
         console.error("Load hearings error:", error);
       }
-      if (activeTab === 'hearings') renderDashboard();
     } catch (error) {
       console.error("Load hearings exception:", error);
     }
+    if (activeTab === 'hearings') renderDashboard();
   }
   
   async function saveCase(caseData) {
@@ -373,62 +523,6 @@
     }
   }
   
-  // ==================== AUTH ====================
-  async function handleLogin(email, password, isSignUp = false, fullName = "") {
-    if (!supabaseClient) {
-      showToast("Supabase not initialized", true);
-      return false;
-    }
-    try {
-      if (isSignUp) {
-        const { data, error } = await supabaseClient.auth.signUp({
-          email, password,
-          options: { data: { full_name: fullName } }
-        });
-        if (error) throw error;
-        if (data.user) {
-          // Try to create profile, but don't fail if it already exists
-          try {
-            const { error: profileError } = await supabaseClient
-              .from('profiles')
-              .insert([{ id: data.user.id, full_name: fullName }]);
-            if (profileError && profileError.code !== '23505') {
-              console.warn("Profile creation warning:", profileError);
-            }
-          } catch (profileErr) {
-            console.warn("Profile creation error:", profileErr);
-          }
-          showToast("Sign up successful! Please login.");
-        }
-        return false;
-      } else {
-        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        currentUser = data.user;
-        await fetchUserProfile();
-        await loadCases();
-        await loadHearings();
-        renderDashboard();
-        showToast(`Welcome back, ${currentUser.user_metadata?.full_name || currentUser.email}`);
-        return true;
-      }
-    } catch (err) {
-      showToast(err.message, true);
-      return false;
-    }
-  }
-  
-  async function handleLogout() {
-    if (supabaseClient) {
-      await supabaseClient.auth.signOut();
-    }
-    currentUser = null;
-    casesList = [];
-    hearingsList = [];
-    renderLoginScreen();
-    showToast("Logged out successfully");
-  }
-  
   // ==================== UI RENDERING ====================
   function renderLoginScreen() {
     const app = document.getElementById("app");
@@ -440,6 +534,12 @@
             <h2 class="text-3xl font-bold text-gray-800">LexForge</h2>
             <p class="text-gray-500 mt-1">Advocate Case Management Suite</p>
           </div>
+          
+          <div class="info-message">
+            <i class="fas fa-envelope mr-2"></i>
+            <strong>Email confirmation required:</strong> After signing up, you'll receive a confirmation email. Please verify your email before logging in.
+          </div>
+          
           <div id="auth-tabs" class="flex gap-2 mb-6 border-b">
             <button id="tab-login-btn" class="py-2 px-4 font-semibold text-indigo-700 border-b-2 border-indigo-600">Login</button>
             <button id="tab-signup-btn" class="py-2 px-4 font-semibold text-gray-500">Sign Up</button>
@@ -448,6 +548,11 @@
             <input type="email" id="login-email" placeholder="Email address" class="mb-3" />
             <input type="password" id="login-password" placeholder="Password" class="mb-4" />
             <button id="do-login-btn" class="btn-primary w-full py-3">Access Dashboard <i class="fas fa-arrow-right ml-1"></i></button>
+            <div id="resend-section" style="display:none; margin-top: 12px;">
+              <button id="resend-confirm-btn" class="btn-secondary w-full py-2 text-sm">
+                <i class="fas fa-paper-plane"></i> Resend confirmation email
+              </button>
+            </div>
           </div>
           <div id="signup-panel" style="display:none;">
             <input type="text" id="signup-name" placeholder="Full Name" class="mb-3" />
@@ -455,35 +560,62 @@
             <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="mb-4" />
             <button id="do-signup-btn" class="btn-primary w-full py-3 bg-indigo-700">Create Account</button>
           </div>
-          <p class="text-xs text-center text-gray-400 mt-6">🔐 Secure RLS | Your data is private</p>
+          <p class="text-xs text-center text-gray-400 mt-6">🔐 Secure RLS | Email confirmation required for security</p>
         </div>
       </div>
     `;
+    
+    let currentLoginEmail = "";
     
     document.getElementById("tab-login-btn").onclick = () => {
       document.getElementById("login-panel").style.display = "block";
       document.getElementById("signup-panel").style.display = "none";
       document.getElementById("tab-login-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
       document.getElementById("tab-signup-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("resend-section").style.display = "none";
     };
+    
     document.getElementById("tab-signup-btn").onclick = () => {
       document.getElementById("signup-panel").style.display = "block";
       document.getElementById("login-panel").style.display = "none";
       document.getElementById("tab-signup-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
       document.getElementById("tab-login-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
     };
+    
     document.getElementById("do-login-btn").onclick = async () => {
       const email = document.getElementById("login-email").value;
       const pwd = document.getElementById("login-password").value;
-      if(email && pwd) await handleLogin(email, pwd, false);
-      else showToast("Enter email and password", true);
+      currentLoginEmail = email;
+      
+      if(email && pwd) {
+        const success = await handleLogin(email, pwd, false);
+        if (!success) {
+          // Show resend button if login failed (likely due to unconfirmed email)
+          document.getElementById("resend-section").style.display = "block";
+        }
+      } else {
+        showToast("Enter email and password", true);
+      }
     };
+    
     document.getElementById("do-signup-btn").onclick = async () => {
       const name = document.getElementById("signup-name").value;
       const email = document.getElementById("signup-email").value;
       const pwd = document.getElementById("signup-password").value;
-      if(!name || !email || pwd.length<6) { showToast("Full name, valid email, password min 6 chars", true); return; }
+      if(!name || !email || pwd.length<6) { 
+        showToast("Full name, valid email, password min 6 chars", true); 
+        return; 
+      }
       await handleLogin(email, pwd, true, name);
+    };
+    
+    document.getElementById("resend-confirm-btn").onclick = async () => {
+      const email = document.getElementById("login-email").value || pendingEmail;
+      if (email) {
+        await resendConfirmationEmail(email);
+      } else {
+        showToast("Please enter your email address first", true);
+      }
     };
   }
   
@@ -522,8 +654,8 @@
       openHearingModal();
     };
     document.getElementById("logoutBtn").onclick = handleLogout;
-    document.getElementById("tabCases").onclick = () => { activeTab = "cases"; renderDashboard(); };
-    document.getElementById("tabHearings").onclick = () => { activeTab = "hearings"; renderDashboard(); };
+    document.getElementById("tabCases").onclick = () => { activeTab = "cases"; renderDashboard(); loadCases(); };
+    document.getElementById("tabHearings").onclick = () => { activeTab = "hearings"; renderDashboard(); loadHearings(); };
     attachCaseActions();
     attachHearingActions();
   }
@@ -532,7 +664,7 @@
     if(casesList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-folder-open text-4xl mb-2"></i><p>No cases registered. Click 'New Case' to begin.</p></div>`;
     return `
       <div class="overflow-x-auto">
-        <table>
+        <table class="w-full">
           <thead>
             <tr><th>Case No.</th><th>Title</th><th>Client</th><th>Court</th><th>Status</th><th>Next Hearing</th><th>Actions</th></tr>
           </thead>
@@ -558,7 +690,7 @@
     if(hearingsList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-gavel text-4xl mb-2"></i><p>No hearings scheduled. Add a hearing for any case.</p></div>`;
     return `
       <div class="overflow-x-auto">
-        <table>
+        <table class="w-full">
           <thead>
             <tr><th>Case Title</th><th>Case Number</th><th>Hearing Date</th><th>Notes</th><th>Actions</th></tr>
           </thead>
@@ -669,44 +801,4 @@
       if(!caseId || !hearingDate) { showToast("Case and Hearing date required", true); return; }
       await saveHearing({
         case_id: caseId,
-        hearing_date: hearingDate,
-        hearing_notes: document.getElementById("hearing_notes").value,
-      });
-    };
-  }
-  
-  function closeAllModals() {
-    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
-    editingCase = null;
-    editingHearing = null;
-  }
-  
-  function formatDate(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-IN'); }
-  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-  function escapeAttr(str) { if(!str) return ''; return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  
-  // ==================== APP INIT ====================
-  (async () => {
-    try {
-      const initSuccess = initSupabase();
-      if (!initSuccess) {
-        document.getElementById("app").innerHTML = `<div class="p-8 text-center text-red-700">Failed to initialize Supabase. Please check your configuration.</div>`;
-        return;
-      }
-      
-      const user = await checkSession();
-      if (user) {
-        await loadCases();
-        await loadHearings();
-        renderDashboard();
-      } else {
-        renderLoginScreen();
-      }
-    } catch (error) {
-      console.error("Initialization error:", error);
-      document.getElementById("app").innerHTML = `<div class="p-8 text-center text-red-700">Application error: ${error.message}</div>`;
-    }
-  })();
-</script>
-</body>
-</html>
+        hearing_date
