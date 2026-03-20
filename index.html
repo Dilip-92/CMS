@@ -7,8 +7,8 @@
   <!-- Google Fonts & Font Awesome -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-  <!-- Supabase JS Library - Using UMD build which is more reliable -->
-  <script src="https://unpkg.com/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
+  <!-- Supabase JS Library - Using working CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.js"></script>
   <style>
     * {
       margin: 0;
@@ -51,6 +51,9 @@
       color: #1f2937;
       border: 1px solid #e2e8f0;
       font-weight: 500;
+      padding: 10px 20px;
+      border-radius: 40px;
+      cursor: pointer;
     }
     .btn-secondary:hover {
       background: #e6e9ef;
@@ -277,9 +280,6 @@
     .p-5 {
       padding: 1.25rem;
     }
-    .md\:p-6 {
-      @media (min-width: 768px) { padding: 1.5rem; }
-    }
     .mb-6 {
       margin-bottom: 1.5rem;
     }
@@ -309,6 +309,9 @@
     }
     .text-4xl {
       font-size: 2.25rem;
+    }
+    .bg-indigo-700 {
+      background-color: #4338ca;
     }
   </style>
 </head>
@@ -355,7 +358,7 @@
   
   function escapeHtml(str) {
     if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
+    return String(str).replace(/[&<>]/g, function(m) {
       if (m === '&') return '&amp;';
       if (m === '<') return '&lt;';
       if (m === '>') return '&gt;';
@@ -387,40 +390,51 @@
   
   // Initialize Supabase
   function initSupabase() {
-    try {
-      console.log("Checking for Supabase...");
-      
-      // Check if supabase is available globally
-      if (typeof supabase === 'undefined' && typeof window.supabase === 'undefined') {
-        console.error("Supabase not loaded");
-        throw new Error("Supabase library not loaded. Please check your internet connection.");
-      }
-      
-      const supabaseLib = window.supabase || supabase;
-      supabaseClient = supabaseLib.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true,
-          flowType: 'pkce'
+    return new Promise((resolve, reject) => {
+      try {
+        // Check if supabase is loaded
+        if (typeof window.supabase === 'undefined') {
+          console.error("Supabase not loaded yet, waiting...");
+          // Wait for supabase to load
+          let attempts = 0;
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (typeof window.supabase !== 'undefined') {
+              clearInterval(checkInterval);
+              try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                  auth: {
+                    autoRefreshToken: true,
+                    persistSession: true,
+                    detectSessionInUrl: true
+                  }
+                });
+                console.log("✅ Supabase client created successfully");
+                resolve(true);
+              } catch (err) {
+                reject(err);
+              }
+            } else if (attempts > 50) {
+              clearInterval(checkInterval);
+              reject(new Error("Supabase library failed to load after 5 seconds"));
+            }
+          }, 100);
+        } else {
+          supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+              autoRefreshToken: true,
+              persistSession: true,
+              detectSessionInUrl: true
+            }
+          });
+          console.log("✅ Supabase client created successfully");
+          resolve(true);
         }
-      });
-      console.log("✅ Supabase client created successfully");
-      return true;
-    } catch (error) {
-      console.error("❌ Supabase init error:", error);
-      document.getElementById("app").innerHTML = `
-        <div class="min-h-screen flex items-center justify-center p-5">
-          <div class="glass-card w-full max-w-md p-8 text-center">
-            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
-            <h2 class="text-xl font-bold mb-2">Connection Error</h2>
-            <p class="text-gray-600 mb-4">Unable to load the application. Please check your internet connection and refresh the page.</p>
-            <button onclick="location.reload()" class="btn-primary">Refresh Page</button>
-          </div>
-        </div>
-      `;
-      return false;
-    }
+      } catch (error) {
+        console.error("❌ Supabase init error:", error);
+        reject(error);
+      }
+    });
   }
   
   // Auth functions
@@ -737,6 +751,96 @@
     }
   }
   
+  // Modal functions
+  function openCaseModal(caseData = null) {
+    editingCase = caseData;
+    const modalHtml = `
+      <div class="modal-overlay" id="caseModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${caseData ? 'Edit Case' : 'Register New Case'}</h3>
+          <input id="case_title" placeholder="Case Title *" value="${escapeAttr(caseData?.case_title || '')}" class="mb-3">
+          <input id="case_number" placeholder="Case Number (Unique)" value="${escapeAttr(caseData?.case_number || '')}" class="mb-3">
+          <input id="client_name" placeholder="Client Name *" value="${escapeAttr(caseData?.client_name || '')}" class="mb-3">
+          <input id="court_name" placeholder="Court Name" value="${escapeAttr(caseData?.court_name || '')}" class="mb-3">
+          <select id="status" class="mb-3">
+            <option value="active" ${caseData?.status==='active'?'selected':''}>Active</option>
+            <option value="pending" ${caseData?.status==='pending'?'selected':''}>Pending</option>
+            <option value="closed" ${caseData?.status==='closed'?'selected':''}>Closed</option>
+          </select>
+          <input type="date" id="filing_date" value="${caseData?.filing_date || ''}" class="mb-3">
+          <input type="date" id="next_hearing" value="${caseData?.next_hearing || ''}" class="mb-3">
+          <textarea id="description" rows="2" placeholder="Case description">${escapeAttr(caseData?.description || '')}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeModalBtn" class="btn-secondary px-5">Cancel</button>
+            <button id="saveCaseBtn" class="btn-primary">Save Case</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const closeBtn = document.getElementById("closeModalBtn");
+    const saveBtn = document.getElementById("saveCaseBtn");
+    if (closeBtn) closeBtn.onclick = closeAllModals;
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        const newCase = {
+          case_title: document.getElementById("case_title").value,
+          case_number: document.getElementById("case_number").value,
+          client_name: document.getElementById("client_name").value,
+          court_name: document.getElementById("court_name").value,
+          status: document.getElementById("status").value,
+          filing_date: document.getElementById("filing_date").value || null,
+          next_hearing: document.getElementById("next_hearing").value || null,
+          description: document.getElementById("description").value
+        };
+        if (!newCase.case_title || !newCase.client_name) {
+          showToast("Case Title and Client Name are required", true);
+          return;
+        }
+        await saveCase(newCase);
+      };
+    }
+  }
+  
+  function openHearingModal(hearingData = null) {
+    editingHearing = hearingData;
+    const modalHtml = `
+      <div class="modal-overlay" id="hearingModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${hearingData ? 'Edit Hearing' : 'Schedule New Hearing'}</h3>
+          <select id="case_id" class="mb-3">
+            <option value="">Select Case</option>
+            ${casesList.map(c => `<option value="${c.id}" ${hearingData?.case_id === c.id ? 'selected' : ''}>${escapeHtml(c.case_number || '')} - ${escapeHtml(c.case_title)}</option>`).join('')}
+          </select>
+          <input type="date" id="hearing_date" value="${hearingData?.hearing_date || ''}" class="mb-3">
+          <textarea id="hearing_notes" rows="3" placeholder="Hearing notes, outcomes, remarks">${escapeAttr(hearingData?.hearing_notes || '')}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeModalBtn" class="btn-secondary px-5">Cancel</button>
+            <button id="saveHearingBtn" class="btn-primary">Save Hearing</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const closeBtn = document.getElementById("closeModalBtn");
+    const saveBtn = document.getElementById("saveHearingBtn");
+    if (closeBtn) closeBtn.onclick = closeAllModals;
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        const hearing = {
+          case_id: document.getElementById("case_id").value,
+          hearing_date: document.getElementById("hearing_date").value,
+          hearing_notes: document.getElementById("hearing_notes").value
+        };
+        if (!hearing.case_id || !hearing.hearing_date) {
+          showToast("Please select a case and hearing date", true);
+          return;
+        }
+        await saveHearing(hearing);
+      };
+    }
+  }
+  
   // UI Rendering functions
   function renderLoginScreen() {
     const app = document.getElementById("app");
@@ -932,4 +1036,87 @@
   }
   
   function renderHearingsTable() {
-    if(hearingsList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-gavel text-4xl mb-2"></i><p>No
+    if(hearingsList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-gavel text-4xl mb-2"></i><p>No hearings scheduled. Add a hearing for any case.</p></div>`;
+    return `
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr><th>Case Title</th><th>Case Number</th><th>Hearing Date</th><th>Notes</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            ${hearingsList.map(h => `
+              <tr>
+                <td>${escapeHtml(h.cases?.case_title || 'N/A')}</td>
+                <td class="font-mono text-xs">${escapeHtml(h.cases?.case_number || '—')}</td>
+                <td class="font-semibold">${formatDate(h.hearing_date)}</td>
+                <td class="max-w-xs truncate">${escapeHtml(h.hearing_notes?.substring(0,60) || '—')}</td>
+                <td><button class="edit-hearing text-indigo-600 mr-2" data-id="${h.id}" data-caseid="${h.case_id}"><i class="fas fa-pen"></i></button><button class="delete-hearing text-red-500" data-id="${h.id}"><i class="fas fa-trash"></i></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  function attachCaseActions() {
+    document.querySelectorAll('.edit-case').forEach(btn => {
+      btn.onclick = () => {
+        const id = btn.getAttribute('data-id');
+        const caseObj = casesList.find(c => c.id === id);
+        if(caseObj) openCaseModal(caseObj);
+      };
+    });
+    document.querySelectorAll('.delete-case').forEach(btn => {
+      btn.onclick = () => deleteCase(btn.getAttribute('data-id'));
+    });
+  }
+  
+  function attachHearingActions() {
+    document.querySelectorAll('.edit-hearing').forEach(btn => {
+      btn.onclick = () => {
+        const hid = btn.getAttribute('data-id');
+        const hearing = hearingsList.find(h => h.id === hid);
+        if(hearing) openHearingModal(hearing);
+      };
+    });
+    document.querySelectorAll('.delete-hearing').forEach(btn => {
+      btn.onclick = () => deleteHearing(btn.getAttribute('data-id'));
+    });
+  }
+  
+  // Initialize app
+  async function initApp() {
+    try {
+      await initSupabase();
+      const user = await checkSession();
+      if (user) {
+        await loadCases();
+        await loadHearings();
+        renderDashboard();
+      } else {
+        renderLoginScreen();
+      }
+    } catch (error) {
+      console.error("Failed to initialize app:", error);
+      const app = document.getElementById("app");
+      if (app) {
+        app.innerHTML = `
+          <div class="min-h-screen flex items-center justify-center p-5">
+            <div class="glass-card w-full max-w-md p-8 text-center">
+              <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
+              <h2 class="text-xl font-bold mb-2">Connection Error</h2>
+              <p class="text-gray-600 mb-4">Unable to load the application. Please check your internet connection and refresh the page.</p>
+              <button onclick="location.reload()" class="btn-primary">Refresh Page</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+  }
+  
+  // Start the app
+  initApp();
+</script>
+</body>
+</html>
