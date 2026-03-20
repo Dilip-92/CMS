@@ -1,246 +1,1321 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Advocate CRM</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>LexForge | Advocate Case Management Suite</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
 
-<style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: #f4f6f9;
-}
+    body {
+      background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
+      min-height: 100vh;
+    }
 
-/* SIDEBAR */
-.sidebar {
-    position: fixed;
-    width: 230px;
-    height: 100%;
-    background: #2c3e50;
-    color: white;
-    padding: 15px;
-}
+    /* Glassmorphism / Modern UI */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(2px);
+      border-radius: 32px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
 
-.logo-box {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.logo-box img {
-    width: 70px;
-}
-
-.sidebar button {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    border: none;
-    background: transparent;
-    color: white;
-    text-align: left;
-    cursor: pointer;
-}
-
-.sidebar button:hover {
-    background: #1abc9c;
-}
-
-/* CONTENT */
-.content {
-    margin-left: 250px;
-    padding: 20px;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-}
-
-/* TABLE */
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-}
-
-/* HIDDEN */
-.hidden { display: none; }
-</style>
+    .btn-primary {
+      background: #1e3a8a;
+      transition: all 0.2s ease;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: #0f2b6d;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(30,58,138,0.2);
+    }
+    .btn-secondary {
+      background: #f0f2f5;
+      color: #1f2937;
+      border: 1px solid #e2e8f0;
+      font-weight: 500;
+    }
+    .btn-secondary:hover {
+      background: #e6e9ef;
+    }
+    .btn-outline-danger {
+      background: transparent;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    .btn-outline-danger:hover {
+      background: #fee2e2;
+    }
+    input, select, textarea {
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 10px 16px;
+      width: 100%;
+      font-size: 0.9rem;
+      transition: 0.2s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .dashboard-card {
+      transition: all 0.2s;
+      cursor: pointer;
+      border-left: 5px solid #1e3a8a;
+    }
+    .dashboard-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-pending { background: #fff3e3; color: #b45309; }
+    .status-closed { background: #f1f5f9; color: #334155; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 14px 8px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    th {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-container {
+      background: white;
+      max-width: 550px;
+      width: 90%;
+      border-radius: 32px;
+      padding: 28px;
+    }
+    @media (max-width: 768px) {
+      .container-main { padding: 1rem; }
+      .flex-responsive { flex-direction: column; gap: 1rem; }
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-
-    <div class="logo-box">
-        <img src="logo.png">
-        <h3>Advocate CRM</h3>
-    </div>
-
-    <button onclick="show('dashboard')">🏠 Dashboard</button>
-    <button onclick="show('users')">👤 User Management</button>
-    <button onclick="show('clients')">🧑 Clients</button>
-    <button onclick="show('cases')">📁 Cases</button>
-    <button onclick="show('caseType')">📂 Case Type</button>
-    <button onclick="show('court')">🏛️ Court Complex</button>
-
-</div>
-
-<!-- CONTENT -->
-<div class="content">
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="card">
-    <h2>Dashboard</h2>
-    <p>Total Clients: <span id="totalClients">0</span></p>
-    <p>Total Cases: <span id="totalCases">0</span></p>
-</div>
-
-<!-- USERS -->
-<div id="users" class="card hidden">
-    <h2>User Management</h2>
-    <input id="uname" placeholder="Name">
-    <input id="umobile" placeholder="Mobile">
-    <button onclick="addUser()">Add User</button>
-
-    <table>
-        <thead><tr><th>Name</th><th>Mobile</th></tr></thead>
-        <tbody id="userTable"></tbody>
-    </table>
-</div>
-
-<!-- CLIENTS -->
-<div id="clients" class="card hidden">
-    <h2>Add Client</h2>
-    <input id="cname" placeholder="Client Name">
-    <input id="cphone" placeholder="Phone">
-    <button onclick="addClient()">Add Client</button>
-
-    <table>
-        <thead><tr><th>Name</th><th>Phone</th></tr></thead>
-        <tbody id="clientTable"></tbody>
-    </table>
-</div>
-
-<!-- CASE TYPE -->
-<div id="caseType" class="card hidden">
-    <h2>Case Type</h2>
-    <input id="ctype" placeholder="Case Type">
-    <button onclick="addCaseType()">Add</button>
-
-    <ul id="caseTypeList"></ul>
-</div>
-
-<!-- COURT -->
-<div id="court" class="card hidden">
-    <h2>Court Complex</h2>
-    <input id="courtName" placeholder="Court Name">
-    <button onclick="addCourt()">Add</button>
-
-    <ul id="courtList"></ul>
-</div>
-
-<!-- CASES -->
-<div id="cases" class="card hidden">
-    <h2>Add Case</h2>
-
-    <input id="caseClient" placeholder="Client Name">
-    <input id="caseTypeInput" placeholder="Case Type">
-    <input id="caseCourt" placeholder="Court">
-    <input type="date" id="caseDate">
-
-    <button onclick="addCase()">Add Case</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Client</th>
-                <th>Type</th>
-                <th>Court</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody id="caseTable"></tbody>
-    </table>
-</div>
-
-</div>
+<div id="app"></div>
 
 <script>
-let users = [];
-let clients = [];
-let cases = [];
-let caseTypes = [];
-let courts = [];
+  // ----------------------------- CONFIGURATION (UPDATE THESE) -----------------------------
+  // YOU MUST REPLACE WITH YOUR ACTUAL SUPABASE URL AND ANON KEY
+  const SUPABASE_URL = "https://nkkhaxjmbjyaerycdobr.supabase.co";        // <-- Replace with your Supabase URL
+  const SUPABASE_ANON_KEY = "<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>LexForge | Advocate Case Management Suite</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Supabase JS Library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
 
-// NAV
-function show(id){
-    document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-}
+    body {
+      background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
+      min-height: 100vh;
+    }
 
-// USER
-function addUser(){
-    users.push({name: uname.value, mobile: umobile.value});
-    renderUsers();
-}
+    /* Glassmorphism / Modern UI */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(2px);
+      border-radius: 32px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
 
-function renderUsers(){
-    userTable.innerHTML = users.map(u=>`<tr><td>${u.name}</td><td>${u.mobile}</td></tr>`).join('');
-}
+    .btn-primary {
+      background: #1e3a8a;
+      transition: all 0.2s ease;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: #0f2b6d;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(30,58,138,0.2);
+    }
+    .btn-secondary {
+      background: #f0f2f5;
+      color: #1f2937;
+      border: 1px solid #e2e8f0;
+      font-weight: 500;
+    }
+    .btn-secondary:hover {
+      background: #e6e9ef;
+    }
+    .btn-outline-danger {
+      background: transparent;
+      border: 1px solid #ef4444;
+      color: #ef4444;
+    }
+    .btn-outline-danger:hover {
+      background: #fee2e2;
+    }
+    input, select, textarea {
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 10px 16px;
+      width: 100%;
+      font-size: 0.9rem;
+      transition: 0.2s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .dashboard-card {
+      transition: all 0.2s;
+      cursor: pointer;
+      border-left: 5px solid #1e3a8a;
+    }
+    .dashboard-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -12px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-pending { background: #fff3e3; color: #b45309; }
+    .status-closed { background: #f1f5f9; color: #334155; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 14px 8px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    th {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-container {
+      background: white;
+      max-width: 550px;
+      width: 90%;
+      border-radius: 32px;
+      padding: 28px;
+    }
+    @media (max-width: 768px) {
+      .container-main { padding: 1rem; }
+      .flex-responsive { flex-direction: column; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
 
-// CLIENT
-function addClient(){
-    clients.push({name: cname.value, phone: cphone.value});
-    renderClients();
-}
+<div id="app"></div>
 
-function renderClients(){
-    clientTable.innerHTML = clients.map(c=>`<tr><td>${c.name}</td><td>${c.phone}</td></tr>`).join('');
-    totalClients.innerText = clients.length;
-}
-
-// CASE TYPE
-function addCaseType(){
-    caseTypes.push(ctype.value);
-    caseTypeList.innerHTML = caseTypes.map(c=>`<li>${c}</li>`).join('');
-}
-
-// COURT
-function addCourt(){
-    courts.push(courtName.value);
-    courtList.innerHTML = courts.map(c=>`<li>${c}</li>`).join('');
-}
-
-// CASE
-function addCase(){
-    cases.push({
-        client: caseClient.value,
-        type: caseTypeInput.value,
-        court: caseCourt.value,
-        date: caseDate.value
+<script>
+  // ----------------------------- CONFIGURATION (UPDATE THESE) -----------------------------
+  // YOU MUST REPLACE WITH YOUR ACTUAL SUPABASE URL AND ANON KEY
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";        // <-- Replace with your Supabase URL
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY"; // <-- Replace with your anon key
+  
+  // ----------------------------- TABLE SCHEMA REQUIRED (Supabase) -----------------------------
+  /*
+    ========== LIST OF TABLES & FIELDS ==========
+    
+    1. Table: "profiles"  (extends auth.users)
+       - id (uuid, references auth.users, primary key)
+       - full_name (text)
+       - advocate_reg_no (text, optional)
+       - created_at (timestamp with time zone)
+    
+    2. Table: "cases"
+       - id (uuid, primary key default gen_random_uuid())
+       - case_title (text, not null)
+       - case_number (text, unique)
+       - client_name (text, not null)
+       - court_name (text)
+       - practice_area (text)
+       - status (text)  -- values: 'active', 'pending', 'closed'
+       - filing_date (date)
+       - next_hearing (date)
+       - description (text)
+       - user_id (uuid, references auth.users, not null)
+       - created_at (timestamp with time zone)
+    
+    3. Table: "hearings"
+       - id (uuid, primary key)
+       - case_id (uuid, references cases on delete cascade)
+       - hearing_date (date, not null)
+       - hearing_notes (text)
+       - user_id (uuid, references auth.users)
+       - created_at (timestamp)
+    
+    4. Table: "documents" (optional but recommended)
+       - id (uuid)
+       - case_id (uuid, references cases)
+       - doc_name (text)
+       - doc_url (text)
+       - user_id (uuid)
+       - uploaded_at (timestamp)
+    
+    Note: Enable Row Level Security (RLS) on all tables and create policies:
+    - For authenticated users: SELECT/INSERT/UPDATE/DELETE only where user_id = auth.uid()
+    
+    Also ensure "profiles" table is automatically created via trigger after user signup.
+    For simplicity, the app will attempt to fetch user profile on login and allow case management.
+  */
+  
+  // ----------------------------- GLOBAL STATE -----------------------------
+  let supabaseClient = null;
+  let currentUser = null;       // stores user object from supabase auth
+  let activeTab = "cases";      // 'cases' or 'hearings'
+  let casesList = [];
+  let hearingsList = [];
+  let showCaseModal = false;
+  let showHearingModal = false;
+  let editingCase = null;
+  let editingHearing = null;
+  let selectedCaseIdForHearing = null;
+  
+  // Helper: initialize supabase
+  function initSupabase() {
+    if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
+      return { error: true, message: "⚠️ Please update SUPABASE_URL and SUPABASE_ANON_KEY inside the script." };
+    }
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      return { error: true, message: "⚠️ Please set your Supabase anon key." };
+    }
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return { error: false };
+  }
+  
+  // Auth state & session check
+  async function checkSession() {
+    if (!supabaseClient) return null;
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error || !session) return null;
+    currentUser = session.user;
+    // fetch profile name
+    await fetchUserProfile();
+    return currentUser;
+  }
+  
+  async function fetchUserProfile() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('full_name')
+      .eq('id', currentUser.id)
+      .single();
+    if (!error && data) {
+      currentUser.user_metadata = { ...currentUser.user_metadata, full_name: data.full_name };
+    }
+  }
+  
+  // ---------- Cases CRUD ----------
+  async function loadCases() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('cases')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if (!error) casesList = data || [];
+    else console.error(error);
+    renderDashboard();
+  }
+  
+  async function loadHearings() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('hearings')
+      .select('*, cases(case_title, case_number)')
+      .eq('user_id', currentUser.id)
+      .order('hearing_date', { ascending: false });
+    if (!error) hearingsList = data || [];
+    else console.error(error);
+    if (activeTab === 'hearings') renderDashboard();
+  }
+  
+  async function saveCase(caseData) {
+    if (!currentUser) return false;
+    const payload = {
+      ...caseData,
+      user_id: currentUser.id,
+    };
+    let result;
+    if (editingCase) {
+      result = await supabaseClient
+        .from('cases')
+        .update(payload)
+        .eq('id', editingCase.id)
+        .eq('user_id', currentUser.id);
+    } else {
+      result = await supabaseClient
+        .from('cases')
+        .insert([payload]);
+    }
+    if (!result.error) {
+      await loadCases();
+      closeAllModals();
+      return true;
+    } else {
+      alert("Error saving case: " + result.error.message);
+      return false;
+    }
+  }
+  
+  async function deleteCase(caseId) {
+    if (!confirm("Delete this case permanently? All related hearings will be removed.")) return;
+    const { error } = await supabaseClient
+      .from('cases')
+      .delete()
+      .eq('id', caseId)
+      .eq('user_id', currentUser.id);
+    if (!error) {
+      await loadCases();
+      await loadHearings();
+    } else alert(error.message);
+  }
+  
+  async function saveHearing(hearingData) {
+    if (!currentUser) return;
+    const payload = {
+      case_id: hearingData.case_id,
+      hearing_date: hearingData.hearing_date,
+      hearing_notes: hearingData.hearing_notes,
+      user_id: currentUser.id,
+    };
+    let result;
+    if (editingHearing) {
+      result = await supabaseClient
+        .from('hearings')
+        .update(payload)
+        .eq('id', editingHearing.id)
+        .eq('user_id', currentUser.id);
+    } else {
+      result = await supabaseClient
+        .from('hearings')
+        .insert([payload]);
+    }
+    if (!result.error) {
+      await loadHearings();
+      closeAllModals();
+    } else alert("Hearing error: " + result.error.message);
+  }
+  
+  async function deleteHearing(hearingId) {
+    if (!confirm("Remove this hearing record?")) return;
+    const { error } = await supabaseClient
+      .from('hearings')
+      .delete()
+      .eq('id', hearingId)
+      .eq('user_id', currentUser.id);
+    if (!error) await loadHearings();
+    else alert(error.message);
+  }
+  
+  // ---------- Auth: Sign Up / Sign In ----------
+  async function handleLogin(email, password, isSignUp = false, fullName = "") {
+    if (!supabaseClient) {
+      alert("Supabase not initialized. Check your URL/Key.");
+      return false;
+    }
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email, password,
+          options: { data: { full_name: fullName } }
+        });
+        if (error) throw error;
+        if (data.user) {
+          // auto create profile entry via trigger? better manual insert for demo
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .insert([{ id: data.user.id, full_name: fullName }]);
+          if (profileError && profileError.code !== '23505') console.warn(profileError);
+          alert("Sign up successful! Please login now.");
+        }
+        return false;
+      } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        currentUser = data.user;
+        await fetchUserProfile();
+        await loadCases();
+        await loadHearings();
+        renderDashboard();
+        return true;
+      }
+    } catch (err) {
+      alert("Auth error: " + err.message);
+      return false;
+    }
+  }
+  
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    casesList = [];
+    hearingsList = [];
+    renderLoginScreen();
+  }
+  
+  // ---------- UI Rendering (React-Like) ----------
+  function renderLoginScreen() {
+    const app = document.getElementById("app");
+    app.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center p-5" style="min-height:100vh; background: radial-gradient(circle at 10% 20%, #eef2ff, #e0e7ff);">
+        <div class="glass-card w-full max-w-md p-8 shadow-2xl">
+          <div class="text-center mb-6">
+            <i class="fas fa-gavel text-5xl text-indigo-800 mb-3"></i>
+            <h2 class="text-3xl font-bold text-gray-800">LexForge</h2>
+            <p class="text-gray-500 mt-1">Advocate Case Management Suite</p>
+          </div>
+          <div id="auth-tabs" class="flex gap-2 mb-6 border-b">
+            <button id="tab-login-btn" class="py-2 px-4 font-semibold text-indigo-700 border-b-2 border-indigo-600">Login</button>
+            <button id="tab-signup-btn" class="py-2 px-4 font-semibold text-gray-500">Sign Up</button>
+          </div>
+          <div id="login-panel">
+            <input type="email" id="login-email" placeholder="Email address" class="mb-3" />
+            <input type="password" id="login-password" placeholder="Password" class="mb-4" />
+            <button id="do-login-btn" class="btn-primary w-full py-3">Access Dashboard <i class="fas fa-arrow-right ml-1"></i></button>
+          </div>
+          <div id="signup-panel" style="display:none;">
+            <input type="text" id="signup-name" placeholder="Full Name" class="mb-3" />
+            <input type="email" id="signup-email" placeholder="Email address" class="mb-3" />
+            <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="mb-4" />
+            <button id="do-signup-btn" class="btn-primary w-full py-3 bg-indigo-700">Create Account</button>
+          </div>
+          <p class="text-xs text-center text-gray-400 mt-6">🔐 Secure RLS ready | Update Supabase keys in script</p>
+        </div>
+      </div>
+    `;
+    document.getElementById("tab-login-btn").onclick = () => {
+      document.getElementById("login-panel").style.display = "block";
+      document.getElementById("signup-panel").style.display = "none";
+      document.getElementById("tab-login-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-signup-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-signup-btn").classList.add("text-gray-500");
+    };
+    document.getElementById("tab-signup-btn").onclick = () => {
+      document.getElementById("signup-panel").style.display = "block";
+      document.getElementById("login-panel").style.display = "none";
+      document.getElementById("tab-signup-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-login-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-login-btn").classList.add("text-gray-500");
+    };
+    document.getElementById("do-login-btn").onclick = async () => {
+      const email = document.getElementById("login-email").value;
+      const pwd = document.getElementById("login-password").value;
+      if(email && pwd) await handleLogin(email, pwd, false);
+      else alert("Enter credentials");
+    };
+    document.getElementById("do-signup-btn").onclick = async () => {
+      const name = document.getElementById("signup-name").value;
+      const email = document.getElementById("signup-email").value;
+      const pwd = document.getElementById("signup-password").value;
+      if(!name || !email || pwd.length<6) { alert("Full name, valid email, password min 6 chars"); return; }
+      await handleLogin(email, pwd, true, name);
+      renderLoginScreen();  // back to login panel after signup
+    };
+  }
+  
+  function renderDashboard() {
+    if (!currentUser) return;
+    const app = document.getElementById("app");
+    const userName = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "Advocate";
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="glass-card p-5 mb-6 flex flex-wrap justify-between items-center">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800"><i class="fas fa-balance-scale mr-2 text-indigo-700"></i>LexForge</h1>
+            <p class="text-gray-500">Welcome back, ${userName} <span class="text-sm">⚖️</span></p>
+          </div>
+          <div class="flex gap-3 mt-3 sm:mt-0">
+            <button id="newCaseBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> New Case</button>
+            <button id="newHearingBtn" class="btn-primary bg-indigo-600"><i class="fas fa-calendar-plus"></i> Add Hearing</button>
+            <button id="logoutBtn" class="btn-secondary"><i class="fas fa-sign-out-alt"></i> Exit</button>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 mb-6 border-b">
+          <button id="tabCases" class="py-2 px-5 font-semibold ${activeTab === 'cases' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-gray-500'}">📋 My Cases (${casesList.length})</button>
+          <button id="tabHearings" class="py-2 px-5 font-semibold ${activeTab === 'hearings' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-gray-500'}">📅 Hearings (${hearingsList.length})</button>
+        </div>
+        
+        <div class="glass-card p-5">
+          ${activeTab === 'cases' ? renderCasesTable() : renderHearingsTable()}
+        </div>
+      </div>
+    `;
+    // event listeners
+    document.getElementById("newCaseBtn").onclick = () => openCaseModal();
+    document.getElementById("newHearingBtn").onclick = () => { 
+      if(casesList.length === 0) { alert("Please create a case first before adding hearing."); return; }
+      openHearingModal();
+    };
+    document.getElementById("logoutBtn").onclick = handleLogout;
+    document.getElementById("tabCases").onclick = () => { activeTab = "cases"; renderDashboard(); };
+    document.getElementById("tabHearings").onclick = () => { activeTab = "hearings"; renderDashboard(); };
+    attachCaseActions();
+    attachHearingActions();
+  }
+  
+  function renderCasesTable() {
+    if(casesList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-folder-open text-4xl mb-2"></i><p>No cases registered. Click 'New Case' to begin.</p></div>`;
+    return `
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>Case No.</th><th>Title</th><th>Client</th><th>Court</th><th>Status</th><th>Next Hearing</th><th style="width:100px">Actions</th></tr></thead>
+          <tbody>
+            ${casesList.map(c => `
+              <tr>
+                <td class="font-mono text-sm">${escapeHtml(c.case_number || '—')}</td>
+                <td class="font-medium">${escapeHtml(c.case_title)}</td>
+                <td>${escapeHtml(c.client_name)}</td>
+                <td>${escapeHtml(c.court_name || '—')}</td>
+                <td><span class="status-badge status-${c.status === 'active' ? 'active' : (c.status === 'pending' ? 'pending' : 'closed')}">${c.status || 'pending'}</span></td>
+                <td>${c.next_hearing ? formatDate(c.next_hearing) : '—'}</td>
+                <td><button class="edit-case text-indigo-600 mr-2" data-id="${c.id}"><i class="fas fa-edit"></i></button><button class="delete-case text-red-500" data-id="${c.id}"><i class="fas fa-trash-alt"></i></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  function renderHearingsTable() {
+    if(hearingsList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-gavel text-4xl mb-2"></i><p>No hearings scheduled. Add a hearing for any case.</p></div>`;
+    return `
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>Case Title</th><th>Case Number</th><th>Hearing Date</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${hearingsList.map(h => `
+              <tr>
+                <td>${escapeHtml(h.cases?.case_title || 'N/A')}</td>
+                <td class="font-mono text-xs">${escapeHtml(h.cases?.case_number || '—')}</td>
+                <td class="font-semibold">${formatDate(h.hearing_date)}</td>
+                <td class="max-w-xs truncate">${escapeHtml(h.hearing_notes?.substring(0,60) || '—')}</td>
+                <td><button class="edit-hearing text-indigo-600 mr-2" data-id="${h.id}" data-caseid="${h.case_id}"><i class="fas fa-pen"></i></button><button class="delete-hearing text-red-500" data-id="${h.id}"><i class="fas fa-trash"></i></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  function attachCaseActions() {
+    document.querySelectorAll('.edit-case').forEach(btn => {
+      btn.onclick = (e) => {
+        const id = btn.getAttribute('data-id');
+        const caseObj = casesList.find(c => c.id === id);
+        if(caseObj) openCaseModal(caseObj);
+      };
     });
-    renderCases();
-}
-
-function renderCases(){
-    caseTable.innerHTML = cases.map(c=>`
-        <tr>
-            <td>${c.client}</td>
-            <td>${c.type}</td>
-            <td>${c.court}</td>
-            <td>${c.date}</td>
-        </tr>`).join('');
-
-    totalCases.innerText = cases.length;
-}
+    document.querySelectorAll('.delete-case').forEach(btn => {
+      btn.onclick = () => deleteCase(btn.getAttribute('data-id'));
+    });
+  }
+  
+  function attachHearingActions() {
+    document.querySelectorAll('.edit-hearing').forEach(btn => {
+      btn.onclick = () => {
+        const hid = btn.getAttribute('data-id');
+        const hearing = hearingsList.find(h => h.id === hid);
+        if(hearing) openHearingModal(hearing);
+      };
+    });
+    document.querySelectorAll('.delete-hearing').forEach(btn => {
+      btn.onclick = () => deleteHearing(btn.getAttribute('data-id'));
+    });
+  }
+  
+  function openCaseModal(caseData = null) {
+    editingCase = caseData;
+    const modalHtml = `
+      <div class="modal-overlay" id="caseModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${caseData ? 'Edit Case' : 'Register New Case'}</h3>
+          <input id="case_title" placeholder="Case Title *" value="${caseData?.case_title || ''}" class="mb-3">
+          <input id="case_number" placeholder="Case Number (Unique)" value="${caseData?.case_number || ''}" class="mb-3">
+          <input id="client_name" placeholder="Client Name *" value="${caseData?.client_name || ''}" class="mb-3">
+          <input id="court_name" placeholder="Court Name" value="${caseData?.court_name || ''}" class="mb-3">
+          <select id="status" class="mb-3"><option value="active" ${caseData?.status==='active'?'selected':''}>Active</option><option value="pending" ${caseData?.status==='pending'?'selected':''}>Pending</option><option value="closed" ${caseData?.status==='closed'?'selected':''}>Closed</option></select>
+          <input type="date" id="filing_date" value="${caseData?.filing_date || ''}" class="mb-3">
+          <input type="date" id="next_hearing" value="${caseData?.next_hearing || ''}" class="mb-3">
+          <textarea id="description" rows="2" placeholder="Case description">${caseData?.description || ''}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeModalBtn" class="btn-secondary px-5">Cancel</button>
+            <button id="saveCaseBtn" class="btn-primary">Save Case</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById("closeModalBtn").onclick = closeAllModals;
+    document.getElementById("saveCaseBtn").onclick = async () => {
+      const newCase = {
+        case_title: document.getElementById("case_title").value,
+        case_number: document.getElementById("case_number").value,
+        client_name: document.getElementById("client_name").value,
+        court_name: document.getElementById("court_name").value,
+        status: document.getElementById("status").value,
+        filing_date: document.getElementById("filing_date").value || null,
+        next_hearing: document.getElementById("next_hearing").value || null,
+        description: document.getElementById("description").value,
+      };
+      if(!newCase.case_title || !newCase.client_name) { alert("Case Title and Client Name required"); return; }
+      await saveCase(newCase);
+    };
+  }
+  
+  function openHearingModal(hearing = null) {
+    editingHearing = hearing;
+    const preselectedCase = hearing ? hearing.case_id : (casesList[0]?.id || '');
+    const options = casesList.map(c => `<option value="${c.id}" ${preselectedCase === c.id ? 'selected' : ''}>${c.case_title} (${c.case_number || 'no#'})</option>`).join('');
+    const modalHtml = `
+      <div class="modal-overlay" id="hearingModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${hearing ? 'Edit Hearing' : 'Schedule New Hearing'}</h3>
+          <select id="hearing_case_id" class="mb-3" required>${options}</select>
+          <input type="date" id="hearing_date" value="${hearing?.hearing_date || ''}" class="mb-3" required>
+          <textarea id="hearing_notes" rows="3" placeholder="Hearing notes / remarks">${hearing?.hearing_notes || ''}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeHearingBtn" class="btn-secondary">Cancel</button>
+            <button id="saveHearingBtn" class="btn-primary">Save Hearing</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById("closeHearingBtn").onclick = closeAllModals;
+    document.getElementById("saveHearingBtn").onclick = async () => {
+      const caseId = document.getElementById("hearing_case_id").value;
+      const hearingDate = document.getElementById("hearing_date").value;
+      if(!caseId || !hearingDate) { alert("Case and Hearing date required"); return; }
+      await saveHearing({
+        case_id: caseId,
+        hearing_date: hearingDate,
+        hearing_notes: document.getElementById("hearing_notes").value,
+      });
+    };
+  }
+  
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
+    editingCase = null;
+    editingHearing = null;
+  }
+  
+  function formatDate(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-IN'); }
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  
+  // ----------------------------- APP INIT -----------------------------
+  (async () => {
+    const init = initSupabase();
+    if (init.error) {
+      document.getElementById("app").innerHTML = `<div class="p-8 text-center text-red-700">${init.message}<br>Please set valid SUPABASE_URL and ANON_KEY in the source code.</div>`;
+      return;
+    }
+    const user = await checkSession();
+    if (user) {
+      await loadCases();
+      await loadHearings();
+      renderDashboard();
+    } else {
+      renderLoginScreen();
+    }
+  })();
 </script>
-
+</body>
+</html>"; // <-- Replace with your anon key
+  
+  // ----------------------------- TABLE SCHEMA REQUIRED (Supabase) -----------------------------
+  /*
+    ========== LIST OF TABLES & FIELDS ==========
+    
+    1. Table: "profiles"  (extends auth.users)
+       - id (uuid, references auth.users, primary key)
+       - full_name (text)
+       - advocate_reg_no (text, optional)
+       - created_at (timestamp with time zone)
+    
+    2. Table: "cases"
+       - id (uuid, primary key default gen_random_uuid())
+       - case_title (text, not null)
+       - case_number (text, unique)
+       - client_name (text, not null)
+       - court_name (text)
+       - practice_area (text)
+       - status (text)  -- values: 'active', 'pending', 'closed'
+       - filing_date (date)
+       - next_hearing (date)
+       - description (text)
+       - user_id (uuid, references auth.users, not null)
+       - created_at (timestamp with time zone)
+    
+    3. Table: "hearings"
+       - id (uuid, primary key)
+       - case_id (uuid, references cases on delete cascade)
+       - hearing_date (date, not null)
+       - hearing_notes (text)
+       - user_id (uuid, references auth.users)
+       - created_at (timestamp)
+    
+    4. Table: "documents" (optional but recommended)
+       - id (uuid)
+       - case_id (uuid, references cases)
+       - doc_name (text)
+       - doc_url (text)
+       - user_id (uuid)
+       - uploaded_at (timestamp)
+    
+    Note: Enable Row Level Security (RLS) on all tables and create policies:
+    - For authenticated users: SELECT/INSERT/UPDATE/DELETE only where user_id = auth.uid()
+    
+    Also ensure "profiles" table is automatically created via trigger after user signup.
+    For simplicity, the app will attempt to fetch user profile on login and allow case management.
+  */
+  
+  // ----------------------------- GLOBAL STATE -----------------------------
+  let supabaseClient = null;
+  let currentUser = null;       // stores user object from supabase auth
+  let activeTab = "cases";      // 'cases' or 'hearings'
+  let casesList = [];
+  let hearingsList = [];
+  let showCaseModal = false;
+  let showHearingModal = false;
+  let editingCase = null;
+  let editingHearing = null;
+  let selectedCaseIdForHearing = null;
+  
+  // Helper: initialize supabase
+  function initSupabase() {
+    if (!SUPABASE_URL || SUPABASE_URL === "YOUR_SUPABASE_URL") {
+      return { error: true, message: "⚠️ Please update SUPABASE_URL and SUPABASE_ANON_KEY inside the script." };
+    }
+    if (!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY === "YOUR_SUPABASE_ANON_KEY") {
+      return { error: true, message: "⚠️ Please set your Supabase anon key." };
+    }
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return { error: false };
+  }
+  
+  // Auth state & session check
+  async function checkSession() {
+    if (!supabaseClient) return null;
+    const { data: { session }, error } = await supabaseClient.auth.getSession();
+    if (error || !session) return null;
+    currentUser = session.user;
+    // fetch profile name
+    await fetchUserProfile();
+    return currentUser;
+  }
+  
+  async function fetchUserProfile() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('profiles')
+      .select('full_name')
+      .eq('id', currentUser.id)
+      .single();
+    if (!error && data) {
+      currentUser.user_metadata = { ...currentUser.user_metadata, full_name: data.full_name };
+    }
+  }
+  
+  // ---------- Cases CRUD ----------
+  async function loadCases() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('cases')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', { ascending: false });
+    if (!error) casesList = data || [];
+    else console.error(error);
+    renderDashboard();
+  }
+  
+  async function loadHearings() {
+    if (!currentUser) return;
+    const { data, error } = await supabaseClient
+      .from('hearings')
+      .select('*, cases(case_title, case_number)')
+      .eq('user_id', currentUser.id)
+      .order('hearing_date', { ascending: false });
+    if (!error) hearingsList = data || [];
+    else console.error(error);
+    if (activeTab === 'hearings') renderDashboard();
+  }
+  
+  async function saveCase(caseData) {
+    if (!currentUser) return false;
+    const payload = {
+      ...caseData,
+      user_id: currentUser.id,
+    };
+    let result;
+    if (editingCase) {
+      result = await supabaseClient
+        .from('cases')
+        .update(payload)
+        .eq('id', editingCase.id)
+        .eq('user_id', currentUser.id);
+    } else {
+      result = await supabaseClient
+        .from('cases')
+        .insert([payload]);
+    }
+    if (!result.error) {
+      await loadCases();
+      closeAllModals();
+      return true;
+    } else {
+      alert("Error saving case: " + result.error.message);
+      return false;
+    }
+  }
+  
+  async function deleteCase(caseId) {
+    if (!confirm("Delete this case permanently? All related hearings will be removed.")) return;
+    const { error } = await supabaseClient
+      .from('cases')
+      .delete()
+      .eq('id', caseId)
+      .eq('user_id', currentUser.id);
+    if (!error) {
+      await loadCases();
+      await loadHearings();
+    } else alert(error.message);
+  }
+  
+  async function saveHearing(hearingData) {
+    if (!currentUser) return;
+    const payload = {
+      case_id: hearingData.case_id,
+      hearing_date: hearingData.hearing_date,
+      hearing_notes: hearingData.hearing_notes,
+      user_id: currentUser.id,
+    };
+    let result;
+    if (editingHearing) {
+      result = await supabaseClient
+        .from('hearings')
+        .update(payload)
+        .eq('id', editingHearing.id)
+        .eq('user_id', currentUser.id);
+    } else {
+      result = await supabaseClient
+        .from('hearings')
+        .insert([payload]);
+    }
+    if (!result.error) {
+      await loadHearings();
+      closeAllModals();
+    } else alert("Hearing error: " + result.error.message);
+  }
+  
+  async function deleteHearing(hearingId) {
+    if (!confirm("Remove this hearing record?")) return;
+    const { error } = await supabaseClient
+      .from('hearings')
+      .delete()
+      .eq('id', hearingId)
+      .eq('user_id', currentUser.id);
+    if (!error) await loadHearings();
+    else alert(error.message);
+  }
+  
+  // ---------- Auth: Sign Up / Sign In ----------
+  async function handleLogin(email, password, isSignUp = false, fullName = "") {
+    if (!supabaseClient) {
+      alert("Supabase not initialized. Check your URL/Key.");
+      return false;
+    }
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabaseClient.auth.signUp({
+          email, password,
+          options: { data: { full_name: fullName } }
+        });
+        if (error) throw error;
+        if (data.user) {
+          // auto create profile entry via trigger? better manual insert for demo
+          const { error: profileError } = await supabaseClient
+            .from('profiles')
+            .insert([{ id: data.user.id, full_name: fullName }]);
+          if (profileError && profileError.code !== '23505') console.warn(profileError);
+          alert("Sign up successful! Please login now.");
+        }
+        return false;
+      } else {
+        const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        currentUser = data.user;
+        await fetchUserProfile();
+        await loadCases();
+        await loadHearings();
+        renderDashboard();
+        return true;
+      }
+    } catch (err) {
+      alert("Auth error: " + err.message);
+      return false;
+    }
+  }
+  
+  async function handleLogout() {
+    await supabaseClient.auth.signOut();
+    currentUser = null;
+    casesList = [];
+    hearingsList = [];
+    renderLoginScreen();
+  }
+  
+  // ---------- UI Rendering (React-Like) ----------
+  function renderLoginScreen() {
+    const app = document.getElementById("app");
+    app.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center p-5" style="min-height:100vh; background: radial-gradient(circle at 10% 20%, #eef2ff, #e0e7ff);">
+        <div class="glass-card w-full max-w-md p-8 shadow-2xl">
+          <div class="text-center mb-6">
+            <i class="fas fa-gavel text-5xl text-indigo-800 mb-3"></i>
+            <h2 class="text-3xl font-bold text-gray-800">LexForge</h2>
+            <p class="text-gray-500 mt-1">Advocate Case Management Suite</p>
+          </div>
+          <div id="auth-tabs" class="flex gap-2 mb-6 border-b">
+            <button id="tab-login-btn" class="py-2 px-4 font-semibold text-indigo-700 border-b-2 border-indigo-600">Login</button>
+            <button id="tab-signup-btn" class="py-2 px-4 font-semibold text-gray-500">Sign Up</button>
+          </div>
+          <div id="login-panel">
+            <input type="email" id="login-email" placeholder="Email address" class="mb-3" />
+            <input type="password" id="login-password" placeholder="Password" class="mb-4" />
+            <button id="do-login-btn" class="btn-primary w-full py-3">Access Dashboard <i class="fas fa-arrow-right ml-1"></i></button>
+          </div>
+          <div id="signup-panel" style="display:none;">
+            <input type="text" id="signup-name" placeholder="Full Name" class="mb-3" />
+            <input type="email" id="signup-email" placeholder="Email address" class="mb-3" />
+            <input type="password" id="signup-password" placeholder="Password (min 6 chars)" class="mb-4" />
+            <button id="do-signup-btn" class="btn-primary w-full py-3 bg-indigo-700">Create Account</button>
+          </div>
+          <p class="text-xs text-center text-gray-400 mt-6">🔐 Secure RLS ready | Update Supabase keys in script</p>
+        </div>
+      </div>
+    `;
+    document.getElementById("tab-login-btn").onclick = () => {
+      document.getElementById("login-panel").style.display = "block";
+      document.getElementById("signup-panel").style.display = "none";
+      document.getElementById("tab-login-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-signup-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-signup-btn").classList.add("text-gray-500");
+    };
+    document.getElementById("tab-signup-btn").onclick = () => {
+      document.getElementById("signup-panel").style.display = "block";
+      document.getElementById("login-panel").style.display = "none";
+      document.getElementById("tab-signup-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-login-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      document.getElementById("tab-login-btn").classList.add("text-gray-500");
+    };
+    document.getElementById("do-login-btn").onclick = async () => {
+      const email = document.getElementById("login-email").value;
+      const pwd = document.getElementById("login-password").value;
+      if(email && pwd) await handleLogin(email, pwd, false);
+      else alert("Enter credentials");
+    };
+    document.getElementById("do-signup-btn").onclick = async () => {
+      const name = document.getElementById("signup-name").value;
+      const email = document.getElementById("signup-email").value;
+      const pwd = document.getElementById("signup-password").value;
+      if(!name || !email || pwd.length<6) { alert("Full name, valid email, password min 6 chars"); return; }
+      await handleLogin(email, pwd, true, name);
+      renderLoginScreen();  // back to login panel after signup
+    };
+  }
+  
+  function renderDashboard() {
+    if (!currentUser) return;
+    const app = document.getElementById("app");
+    const userName = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "Advocate";
+    app.innerHTML = `
+      <div class="max-w-7xl mx-auto p-4 md:p-6">
+        <div class="glass-card p-5 mb-6 flex flex-wrap justify-between items-center">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-800"><i class="fas fa-balance-scale mr-2 text-indigo-700"></i>LexForge</h1>
+            <p class="text-gray-500">Welcome back, ${userName} <span class="text-sm">⚖️</span></p>
+          </div>
+          <div class="flex gap-3 mt-3 sm:mt-0">
+            <button id="newCaseBtn" class="btn-primary"><i class="fas fa-plus-circle"></i> New Case</button>
+            <button id="newHearingBtn" class="btn-primary bg-indigo-600"><i class="fas fa-calendar-plus"></i> Add Hearing</button>
+            <button id="logoutBtn" class="btn-secondary"><i class="fas fa-sign-out-alt"></i> Exit</button>
+          </div>
+        </div>
+        
+        <div class="flex gap-3 mb-6 border-b">
+          <button id="tabCases" class="py-2 px-5 font-semibold ${activeTab === 'cases' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-gray-500'}">📋 My Cases (${casesList.length})</button>
+          <button id="tabHearings" class="py-2 px-5 font-semibold ${activeTab === 'hearings' ? 'text-indigo-700 border-b-2 border-indigo-600' : 'text-gray-500'}">📅 Hearings (${hearingsList.length})</button>
+        </div>
+        
+        <div class="glass-card p-5">
+          ${activeTab === 'cases' ? renderCasesTable() : renderHearingsTable()}
+        </div>
+      </div>
+    `;
+    // event listeners
+    document.getElementById("newCaseBtn").onclick = () => openCaseModal();
+    document.getElementById("newHearingBtn").onclick = () => { 
+      if(casesList.length === 0) { alert("Please create a case first before adding hearing."); return; }
+      openHearingModal();
+    };
+    document.getElementById("logoutBtn").onclick = handleLogout;
+    document.getElementById("tabCases").onclick = () => { activeTab = "cases"; renderDashboard(); };
+    document.getElementById("tabHearings").onclick = () => { activeTab = "hearings"; renderDashboard(); };
+    attachCaseActions();
+    attachHearingActions();
+  }
+  
+  function renderCasesTable() {
+    if(casesList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-folder-open text-4xl mb-2"></i><p>No cases registered. Click 'New Case' to begin.</p></div>`;
+    return `
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>Case No.</th><th>Title</th><th>Client</th><th>Court</th><th>Status</th><th>Next Hearing</th><th style="width:100px">Actions</th></tr></thead>
+          <tbody>
+            ${casesList.map(c => `
+              <tr>
+                <td class="font-mono text-sm">${escapeHtml(c.case_number || '—')}</td>
+                <td class="font-medium">${escapeHtml(c.case_title)}</td>
+                <td>${escapeHtml(c.client_name)}</td>
+                <td>${escapeHtml(c.court_name || '—')}</td>
+                <td><span class="status-badge status-${c.status === 'active' ? 'active' : (c.status === 'pending' ? 'pending' : 'closed')}">${c.status || 'pending'}</span></td>
+                <td>${c.next_hearing ? formatDate(c.next_hearing) : '—'}</td>
+                <td><button class="edit-case text-indigo-600 mr-2" data-id="${c.id}"><i class="fas fa-edit"></i></button><button class="delete-case text-red-500" data-id="${c.id}"><i class="fas fa-trash-alt"></i></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  function renderHearingsTable() {
+    if(hearingsList.length === 0) return `<div class="text-center py-12 text-gray-400"><i class="fas fa-gavel text-4xl mb-2"></i><p>No hearings scheduled. Add a hearing for any case.</p></div>`;
+    return `
+      <div class="overflow-x-auto">
+        <table>
+          <thead><tr><th>Case Title</th><th>Case Number</th><th>Hearing Date</th><th>Notes</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${hearingsList.map(h => `
+              <tr>
+                <td>${escapeHtml(h.cases?.case_title || 'N/A')}</td>
+                <td class="font-mono text-xs">${escapeHtml(h.cases?.case_number || '—')}</td>
+                <td class="font-semibold">${formatDate(h.hearing_date)}</td>
+                <td class="max-w-xs truncate">${escapeHtml(h.hearing_notes?.substring(0,60) || '—')}</td>
+                <td><button class="edit-hearing text-indigo-600 mr-2" data-id="${h.id}" data-caseid="${h.case_id}"><i class="fas fa-pen"></i></button><button class="delete-hearing text-red-500" data-id="${h.id}"><i class="fas fa-trash"></i></button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+  
+  function attachCaseActions() {
+    document.querySelectorAll('.edit-case').forEach(btn => {
+      btn.onclick = (e) => {
+        const id = btn.getAttribute('data-id');
+        const caseObj = casesList.find(c => c.id === id);
+        if(caseObj) openCaseModal(caseObj);
+      };
+    });
+    document.querySelectorAll('.delete-case').forEach(btn => {
+      btn.onclick = () => deleteCase(btn.getAttribute('data-id'));
+    });
+  }
+  
+  function attachHearingActions() {
+    document.querySelectorAll('.edit-hearing').forEach(btn => {
+      btn.onclick = () => {
+        const hid = btn.getAttribute('data-id');
+        const hearing = hearingsList.find(h => h.id === hid);
+        if(hearing) openHearingModal(hearing);
+      };
+    });
+    document.querySelectorAll('.delete-hearing').forEach(btn => {
+      btn.onclick = () => deleteHearing(btn.getAttribute('data-id'));
+    });
+  }
+  
+  function openCaseModal(caseData = null) {
+    editingCase = caseData;
+    const modalHtml = `
+      <div class="modal-overlay" id="caseModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${caseData ? 'Edit Case' : 'Register New Case'}</h3>
+          <input id="case_title" placeholder="Case Title *" value="${caseData?.case_title || ''}" class="mb-3">
+          <input id="case_number" placeholder="Case Number (Unique)" value="${caseData?.case_number || ''}" class="mb-3">
+          <input id="client_name" placeholder="Client Name *" value="${caseData?.client_name || ''}" class="mb-3">
+          <input id="court_name" placeholder="Court Name" value="${caseData?.court_name || ''}" class="mb-3">
+          <select id="status" class="mb-3"><option value="active" ${caseData?.status==='active'?'selected':''}>Active</option><option value="pending" ${caseData?.status==='pending'?'selected':''}>Pending</option><option value="closed" ${caseData?.status==='closed'?'selected':''}>Closed</option></select>
+          <input type="date" id="filing_date" value="${caseData?.filing_date || ''}" class="mb-3">
+          <input type="date" id="next_hearing" value="${caseData?.next_hearing || ''}" class="mb-3">
+          <textarea id="description" rows="2" placeholder="Case description">${caseData?.description || ''}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeModalBtn" class="btn-secondary px-5">Cancel</button>
+            <button id="saveCaseBtn" class="btn-primary">Save Case</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById("closeModalBtn").onclick = closeAllModals;
+    document.getElementById("saveCaseBtn").onclick = async () => {
+      const newCase = {
+        case_title: document.getElementById("case_title").value,
+        case_number: document.getElementById("case_number").value,
+        client_name: document.getElementById("client_name").value,
+        court_name: document.getElementById("court_name").value,
+        status: document.getElementById("status").value,
+        filing_date: document.getElementById("filing_date").value || null,
+        next_hearing: document.getElementById("next_hearing").value || null,
+        description: document.getElementById("description").value,
+      };
+      if(!newCase.case_title || !newCase.client_name) { alert("Case Title and Client Name required"); return; }
+      await saveCase(newCase);
+    };
+  }
+  
+  function openHearingModal(hearing = null) {
+    editingHearing = hearing;
+    const preselectedCase = hearing ? hearing.case_id : (casesList[0]?.id || '');
+    const options = casesList.map(c => `<option value="${c.id}" ${preselectedCase === c.id ? 'selected' : ''}>${c.case_title} (${c.case_number || 'no#'})</option>`).join('');
+    const modalHtml = `
+      <div class="modal-overlay" id="hearingModalOverlay">
+        <div class="modal-container">
+          <h3 class="text-xl font-bold mb-4">${hearing ? 'Edit Hearing' : 'Schedule New Hearing'}</h3>
+          <select id="hearing_case_id" class="mb-3" required>${options}</select>
+          <input type="date" id="hearing_date" value="${hearing?.hearing_date || ''}" class="mb-3" required>
+          <textarea id="hearing_notes" rows="3" placeholder="Hearing notes / remarks">${hearing?.hearing_notes || ''}</textarea>
+          <div class="flex justify-end gap-3 mt-5">
+            <button id="closeHearingBtn" class="btn-secondary">Cancel</button>
+            <button id="saveHearingBtn" class="btn-primary">Save Hearing</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    document.getElementById("closeHearingBtn").onclick = closeAllModals;
+    document.getElementById("saveHearingBtn").onclick = async () => {
+      const caseId = document.getElementById("hearing_case_id").value;
+      const hearingDate = document.getElementById("hearing_date").value;
+      if(!caseId || !hearingDate) { alert("Case and Hearing date required"); return; }
+      await saveHearing({
+        case_id: caseId,
+        hearing_date: hearingDate,
+        hearing_notes: document.getElementById("hearing_notes").value,
+      });
+    };
+  }
+  
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
+    editingCase = null;
+    editingHearing = null;
+  }
+  
+  function formatDate(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-IN'); }
+  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+  
+  // ----------------------------- APP INIT -----------------------------
+  (async () => {
+    const init = initSupabase();
+    if (init.error) {
+      document.getElementById("app").innerHTML = `<div class="p-8 text-center text-red-700">${init.message}<br>Please set valid SUPABASE_URL and ANON_KEY in the source code.</div>`;
+      return;
+    }
+    const user = await checkSession();
+    if (user) {
+      await loadCases();
+      await loadHearings();
+      renderDashboard();
+    } else {
+      renderLoginScreen();
+    }
+  })();
+</script>
 </body>
 </html>
