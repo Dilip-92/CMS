@@ -84,7 +84,7 @@
 <div id="loginDiv" class="card">
     <h3>Login</h3>
     <input id="mobile" placeholder="Mobile">
-    <input id="pin" type="password" placeholder="pin">
+    <input id="pin" type="password" placeholder="PIN">
     <button onclick="login()">Login</button>
 </div>
 
@@ -148,20 +148,20 @@
 
 <script>
 const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg"; // 🔁 Replace with your ANON key
 
 const db = supabase.createClient(supabaseUrl, supabaseKey);
 
 // LOGIN
 async function login() {
     const mobile = document.getElementById("mobile").value.trim();
-        const pin = document
+    const pin = document.getElementById("pin").value.trim();
 
     const { data, error } = await db
         .from('users')
         .select('*')
-        .eq('mobile', mobile)   // ✅ FIXED
-        .eq('pin', pin);        // ✅ FIXED
+        .eq('mobile', mobile)
+        .eq('pin', pin);
 
     if (error) {
         alert("Error: " + error.message);
@@ -173,15 +173,7 @@ async function login() {
         document.getElementById("loginDiv").classList.add("hidden");
         document.getElementById("dashboard").classList.remove("hidden");
     } else {
-        alert("Invalid mobile or Pin ❌");
-    }
-}
-
-    if (data.length > 0) {
-        document.getElementById("loginDiv").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-    } else {
-        alert("Invalid mobile or pin ❌");
+        alert("Invalid Mobile or PIN ❌");
     }
 }
 
@@ -204,9 +196,11 @@ async function addCase() {
     let fileUrl = "";
 
     if (file) {
+        const fileName = Date.now() + "_" + file.name;
+
         const { data, error } = await db.storage
             .from('documents')
-            .upload(Date.now() + "_" + file.name, file);
+            .upload(fileName, file);
 
         if (error) {
             alert("File upload error: " + error.message);
@@ -228,6 +222,11 @@ async function addCase() {
         alert("Error: " + error.message);
     } else {
         alert("Case Added Successfully ✅");
+
+        // Clear fields
+        document.getElementById("client_name").value = "";
+        document.getElementById("case_type").value = "";
+        document.getElementById("hearing_date").value = "";
     }
 }
 
@@ -257,4 +256,4 @@ async function getCases() {
 </script>
 
 </body>
-</html>  
+</html>
