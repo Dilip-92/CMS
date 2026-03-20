@@ -1,7 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>LexForge | Advocate Case Management Suite</title>
+  <!-- Google Fonts & Font Awesome -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <!-- Supabase JS Library with multiple CDN options -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f5f7fc 0%, #eef2f9 100%);
+      min-height: 100vh;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(2px);
+      border-radius: 32px;
+      box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+
+    .btn-primary {
+      background: #1e3a8a;
+      transition: all 0.2s ease;
+      color: white;
+      font-weight: 600;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 40px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .btn-primary:hover {
+      background: #0f2b6d;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(30,58,138,0.2);
+    }
+    .btn-secondary {
+      background: #f0f2f5;
+      color: #1f2937;
+      border: 1px solid #e2e8f0;
+      font-weight: 500;
+    }
+    .btn-secondary:hover {
+      background: #e6e9ef;
+    }
+    input, select, textarea {
+      border: 1px solid #e2e8f0;
+      border-radius: 20px;
+      padding: 10px 16px;
+      width: 100%;
+      font-size: 0.9rem;
+      transition: 0.2s;
+      background: white;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 40px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+    .status-active { background: #dcfce7; color: #15803d; }
+    .status-pending { background: #fff3e3; color: #b45309; }
+    .status-closed { background: #f1f5f9; color: #334155; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 14px 8px;
+      border-bottom: 1px solid #edf2f7;
+    }
+    th {
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .modal-overlay {
+      position: fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-container {
+      background: white;
+      max-width: 550px;
+      width: 90%;
+      border-radius: 32px;
+      padding: 28px;
+    }
+    @media (max-width: 768px) {
+      .flex-responsive { flex-direction: column; gap: 1rem; }
+      th, td { font-size: 0.8rem; padding: 10px 4px; }
+    }
+    .toast-notification {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e3a8a;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 40px;
+      z-index: 1100;
+      animation: slideIn 0.3s ease;
+    }
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .info-message {
+      background: #e0f2fe;
+      border-left: 4px solid #0284c7;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+      font-size: 0.85rem;
+      color: #0c4a6e;
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <div class="loading">
+    <i class="fas fa-spinner fa-spin fa-2x"></i>
+    <p>Loading application...</p>
+  </div>
+</div>
+
 <script>
   // ==================== CONFIGURATION ====================
   const SUPABASE_URL = "https://nkkhaxjmbjyaerycdobr.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+  
+  // Wait for Supabase to load
+  function waitForSupabase() {
+    return new Promise((resolve) => {
+      if (window.supabase) {
+        resolve();
+        return;
+      }
+      
+      let attempts = 0;
+      const interval = setInterval(() => {
+        attempts++;
+        if (window.supabase) {
+          clearInterval(interval);
+          resolve();
+        } else if (attempts > 50) { // 5 seconds timeout
+          clearInterval(interval);
+          console.error("Supabase failed to load after 5 seconds");
+          resolve();
+        }
+      }, 100);
+    });
+  }
   
   // ==================== GLOBAL STATE ====================
   let supabaseClient = null;
@@ -14,17 +194,31 @@
   let pendingEmail = null;
   
   function showToast(message, isError = false, duration = 3000) {
+    // Check if document.body exists before creating toast
+    if (!document.body) {
+      console.log("Toast (body not ready):", message);
+      return;
+    }
+    
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.style.backgroundColor = isError ? '#dc2626' : '#1e3a8a';
     toast.innerHTML = message;
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), duration);
+    setTimeout(() => {
+      if (toast && toast.remove) toast.remove();
+    }, duration);
   }
   
   function initSupabase() {
     try {
       console.log("🔧 Creating Supabase client...");
+      console.log("window.supabase exists:", !!window.supabase);
+      
+      if (!window.supabase) {
+        throw new Error("Supabase library not loaded. Please check your internet connection.");
+      }
+      
       supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         auth: {
           autoRefreshToken: true,
@@ -359,6 +553,8 @@
   // ==================== UI RENDERING ====================
   function renderLoginScreen() {
     const app = document.getElementById("app");
+    if (!app) return;
+    
     app.innerHTML = `
       <div class="min-h-screen flex items-center justify-center p-5" style="min-height:100vh; background: radial-gradient(circle at 10% 20%, #eef2ff, #e0e7ff);">
         <div class="glass-card w-full max-w-md p-8 shadow-2xl">
@@ -400,60 +596,82 @@
     
     let currentLoginEmail = "";
     
-    document.getElementById("tab-login-btn").onclick = () => {
-      document.getElementById("login-panel").style.display = "block";
-      document.getElementById("signup-panel").style.display = "none";
-      document.getElementById("tab-login-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
-      document.getElementById("tab-signup-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
-      document.getElementById("resend-section").style.display = "none";
-    };
+    const loginTab = document.getElementById("tab-login-btn");
+    const signupTab = document.getElementById("tab-signup-btn");
+    const loginPanel = document.getElementById("login-panel");
+    const signupPanel = document.getElementById("signup-panel");
+    const doLoginBtn = document.getElementById("do-login-btn");
+    const doSignupBtn = document.getElementById("do-signup-btn");
+    const resendBtn = document.getElementById("resend-confirm-btn");
     
-    document.getElementById("tab-signup-btn").onclick = () => {
-      document.getElementById("signup-panel").style.display = "block";
-      document.getElementById("login-panel").style.display = "none";
-      document.getElementById("tab-signup-btn").classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
-      document.getElementById("tab-login-btn").classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
-    };
+    if (loginTab) {
+      loginTab.onclick = () => {
+        if (loginPanel) loginPanel.style.display = "block";
+        if (signupPanel) signupPanel.style.display = "none";
+        loginTab.classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+        if (signupTab) signupTab.classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+        const resendSection = document.getElementById("resend-section");
+        if (resendSection) resendSection.style.display = "none";
+      };
+    }
     
-    document.getElementById("do-login-btn").onclick = async () => {
-      const email = document.getElementById("login-email").value;
-      const pwd = document.getElementById("login-password").value;
-      currentLoginEmail = email;
-      
-      if(email && pwd) {
-        const success = await handleLogin(email, pwd, false);
-        if (!success) {
-          document.getElementById("resend-section").style.display = "block";
+    if (signupTab) {
+      signupTab.onclick = () => {
+        if (signupPanel) signupPanel.style.display = "block";
+        if (loginPanel) loginPanel.style.display = "none";
+        signupTab.classList.add("border-b-2", "border-indigo-600", "text-indigo-700");
+        if (loginTab) loginTab.classList.remove("border-b-2", "border-indigo-600", "text-indigo-700");
+      };
+    }
+    
+    if (doLoginBtn) {
+      doLoginBtn.onclick = async () => {
+        const email = document.getElementById("login-email")?.value || "";
+        const pwd = document.getElementById("login-password")?.value || "";
+        currentLoginEmail = email;
+        
+        if(email && pwd) {
+          const success = await handleLogin(email, pwd, false);
+          if (!success) {
+            const resendSection = document.getElementById("resend-section");
+            if (resendSection) resendSection.style.display = "block";
+          }
+        } else {
+          showToast("Enter email and password", true);
         }
-      } else {
-        showToast("Enter email and password", true);
-      }
-    };
+      };
+    }
     
-    document.getElementById("do-signup-btn").onclick = async () => {
-      const name = document.getElementById("signup-name").value;
-      const email = document.getElementById("signup-email").value;
-      const pwd = document.getElementById("signup-password").value;
-      if(!name || !email || pwd.length<6) { 
-        showToast("Full name, valid email, password min 6 chars", true); 
-        return; 
-      }
-      await handleLogin(email, pwd, true, name);
-    };
+    if (doSignupBtn) {
+      doSignupBtn.onclick = async () => {
+        const name = document.getElementById("signup-name")?.value || "";
+        const email = document.getElementById("signup-email")?.value || "";
+        const pwd = document.getElementById("signup-password")?.value || "";
+        if(!name || !email || pwd.length<6) { 
+          showToast("Full name, valid email, password min 6 chars", true); 
+          return; 
+        }
+        await handleLogin(email, pwd, true, name);
+      };
+    }
     
-    document.getElementById("resend-confirm-btn").onclick = async () => {
-      const email = document.getElementById("login-email").value || pendingEmail;
-      if (email) {
-        await resendConfirmationEmail(email);
-      } else {
-        showToast("Please enter your email address first", true);
-      }
-    };
+    if (resendBtn) {
+      resendBtn.onclick = async () => {
+        const email = document.getElementById("login-email")?.value || pendingEmail;
+        if (email) {
+          await resendConfirmationEmail(email);
+        } else {
+          showToast("Please enter your email address first", true);
+        }
+      };
+    }
   }
   
   function renderDashboard() {
     if (!currentUser) return;
     const app = document.getElementById("app");
+    if (!app) return;
+    
     const userName = currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || "Advocate";
     app.innerHTML = `
       <div class="max-w-7xl mx-auto p-4 md:p-6">
@@ -480,14 +698,22 @@
       </div>
     `;
     
-    document.getElementById("newCaseBtn").onclick = () => openCaseModal();
-    document.getElementById("newHearingBtn").onclick = () => { 
-      if(casesList.length === 0) { showToast("Please create a case first", true); return; }
-      openHearingModal();
-    };
-    document.getElementById("logoutBtn").onclick = handleLogout;
-    document.getElementById("tabCases").onclick = () => { activeTab = "cases"; renderDashboard(); loadCases(); };
-    document.getElementById("tabHearings").onclick = () => { activeTab = "hearings"; renderDashboard(); loadHearings(); };
+    const newCaseBtn = document.getElementById("newCaseBtn");
+    const newHearingBtn = document.getElementById("newHearingBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const tabCases = document.getElementById("tabCases");
+    const tabHearings = document.getElementById("tabHearings");
+    
+    if (newCaseBtn) newCaseBtn.onclick = () => openCaseModal();
+    if (newHearingBtn) {
+      newHearingBtn.onclick = () => { 
+        if(casesList.length === 0) { showToast("Please create a case first", true); return; }
+        openHearingModal();
+      };
+    }
+    if (logoutBtn) logoutBtn.onclick = handleLogout;
+    if (tabCases) tabCases.onclick = () => { activeTab = "cases"; renderDashboard(); loadCases(); };
+    if (tabHearings) tabHearings.onclick = () => { activeTab = "hearings"; renderDashboard(); loadHearings(); };
     attachCaseActions();
     attachHearingActions();
   }
@@ -510,7 +736,7 @@
                 <td><span class="status-badge status-${c.status === 'active' ? 'active' : (c.status === 'pending' ? 'pending' : 'closed')}">${c.status || 'pending'}</span></td>
                 <td>${c.next_hearing ? formatDate(c.next_hearing) : '—'}</td>
                 <td><button class="edit-case text-indigo-600 mr-2" data-id="${c.id}"><i class="fas fa-edit"></i></button><button class="delete-case text-red-500" data-id="${c.id}"><i class="fas fa-trash-alt"></i></button></td>
-              </tr>
+               </tr>
             `).join('')}
           </tbody>
         </table>
@@ -528,7 +754,7 @@
           </thead>
           <tbody>
             ${hearingsList.map(h => `
-              <tr>
+               <tr>
                 <td>${escapeHtml(h.cases?.case_title || 'N/A')}</td>
                 <td class="font-mono text-xs">${escapeHtml(h.cases?.case_number || '—')}</td>
                 <td class="font-semibold">${formatDate(h.hearing_date)}</td>
@@ -590,141 +816,17 @@
       </div>
     `;
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById("closeModalBtn").onclick = closeAllModals;
-    document.getElementById("saveCaseBtn").onclick = async () => {
-      const newCase = {
-        case_title: document.getElementById("case_title").value,
-        case_number: document.getElementById("case_number").value,
-        client_name: document.getElementById("client_name").value,
-        court_name: document.getElementById("court_name").value,
-        status: document.getElementById("status").value,
-        filing_date: document.getElementById("filing_date").value || null,
-        next_hearing: document.getElementById("next_hearing").value || null,
-        description: document.getElementById("description").value,
-      };
-      if(!newCase.case_title || !newCase.client_name) { showToast("Case Title and Client Name required", true); return; }
-      await saveCase(newCase);
-    };
-  }
-  
-  function openHearingModal(hearing = null) {
-    editingHearing = hearing;
-    const preselectedCase = hearing ? hearing.case_id : (casesList[0]?.id || '');
-    const options = casesList.map(c => `<option value="${c.id}" ${preselectedCase === c.id ? 'selected' : ''}>${escapeAttr(c.case_title)} (${c.case_number || 'no#'})</option>`).join('');
-    const modalHtml = `
-      <div class="modal-overlay" id="hearingModalOverlay">
-        <div class="modal-container">
-          <h3 class="text-xl font-bold mb-4">${hearing ? 'Edit Hearing' : 'Schedule New Hearing'}</h3>
-          <select id="hearing_case_id" class="mb-3" required>${options}</select>
-          <input type="date" id="hearing_date" value="${hearing?.hearing_date || ''}" class="mb-3" required>
-          <textarea id="hearing_notes" rows="3" placeholder="Hearing notes / remarks">${escapeAttr(hearing?.hearing_notes || '')}</textarea>
-          <div class="flex justify-end gap-3 mt-5">
-            <button id="closeHearingBtn" class="btn-secondary">Cancel</button>
-            <button id="saveHearingBtn" class="btn-primary">Save Hearing</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', modalHtml);
-    document.getElementById("closeHearingBtn").onclick = closeAllModals;
-    document.getElementById("saveHearingBtn").onclick = async () => {
-      const caseId = document.getElementById("hearing_case_id").value;
-      const hearingDate = document.getElementById("hearing_date").value;
-      if(!caseId || !hearingDate) { showToast("Case and Hearing date required", true); return; }
-      await saveHearing({
-        case_id: caseId,
-        hearing_date: hearingDate,
-        hearing_notes: document.getElementById("hearing_notes").value,
-      });
-    };
-  }
-  
-  function closeAllModals() {
-    document.querySelectorAll('.modal-overlay').forEach(el => el.remove());
-    editingCase = null;
-    editingHearing = null;
-  }
-  
-  function formatDate(dateStr) { if(!dateStr) return '—'; const d=new Date(dateStr); return d.toLocaleDateString('en-IN'); }
-  function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-  function escapeAttr(str) { if(!str) return ''; return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-  
-  // ==================== APP INIT WITH DEBUGGING ====================
-  (async () => {
-    console.log("🚀 App starting...");
-    
-    // Add timeout indicator
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      if (elapsed >= 5) {
-        console.log(`⏱️ Still initializing... ${elapsed} seconds`);
-        const appDiv = document.getElementById("app");
-        if (appDiv && appDiv.innerHTML.includes("Initializing application")) {
-          appDiv.innerHTML = `
-            <div class="p-8 text-center">
-              <div class="text-yellow-600 mb-4">
-                <i class="fas fa-spinner fa-spin fa-3x"></i>
-              </div>
-              <h3 class="text-xl font-bold mb-2">Still Loading...</h3>
-              <p class="text-gray-600">This is taking longer than expected (${elapsed} seconds).</p>
-              <button onclick="location.reload()" class="btn-primary mt-4">Refresh Page</button>
-              <div class="mt-4 text-sm text-left bg-gray-100 p-4 rounded">
-                <strong>Debug Info:</strong><br>
-                Check browser console (F12) for errors<br>
-                Supabase URL: ${SUPABASE_URL ? '✓ Set' : '✗ Missing'}<br>
-                Anon Key: ${SUPABASE_ANON_KEY ? '✓ Set' : '✗ Missing'}<br>
-                Time elapsed: ${elapsed} seconds
-              </div>
-            </div>
-          `;
-        }
-      }
-    }, 1000);
-    
-    try {
-      console.log("1️⃣ Initializing Supabase...");
-      const initSuccess = initSupabase();
-      if (!initSuccess) {
-        throw new Error("Supabase initialization failed");
-      }
-      console.log("✅ Supabase initialized");
-      
-      console.log("2️⃣ Checking session...");
-      const user = await checkSession();
-      console.log("Session check result:", user ? "Logged in" : "Not logged in");
-      
-      if (user) {
-        console.log("3️⃣ Loading data...");
-        await loadCases();
-        await loadHearings();
-        console.log("4️⃣ Rendering dashboard...");
-        renderDashboard();
-      } else {
-        console.log("4️⃣ Rendering login screen...");
-        renderLoginScreen();
-      }
-      
-      clearInterval(interval);
-      console.log("✅ App initialized successfully in " + Math.floor((Date.now() - startTime) / 1000) + " seconds!");
-      
-    } catch (error) {
-      console.error("❌ Initialization error:", error);
-      clearInterval(interval);
-      document.getElementById("app").innerHTML = `
-        <div class="min-h-screen flex items-center justify-center p-5">
-          <div class="glass-card w-full max-w-md p-8 text-center">
-            <i class="fas fa-exclamation-triangle text-5xl text-red-500 mb-4"></i>
-            <h2 class="text-2xl font-bold text-gray-800 mb-2">Initialization Failed</h2>
-            <p class="text-gray-600 mb-4">${error.message}</p>
-            <div class="bg-red-50 p-4 rounded-lg mb-4 text-left text-sm">
-              <strong>Error Details:</strong><br>
-              ${error.stack || error.toString()}
-            </div>
-            <button onclick="location.reload()" class="btn-primary w-full">Retry</button>
-          </div>
-        </div>
-      `;
-    }
-  })();
-</script>
+    const closeBtn = document.getElementById("closeModalBtn");
+    const saveBtn = document.getElementById("saveCaseBtn");
+    if (closeBtn) closeBtn.onclick = closeAllModals;
+    if (saveBtn) {
+      saveBtn.onclick = async () => {
+        const newCase = {
+          case_title: document.getElementById("case_title").value,
+          case_number: document.getElementById("case_number").value,
+          client_name: document.getElementById("client_name").value,
+          court_name: document.getElementById("court_name").value,
+          status: document.getElementById("status").value,
+          filing_date: document.getElementById("filing_date").value || null,
+          next_hearing: document.getElementById("next_hearing").value || null,
+          description: document.getElementById("description").value
