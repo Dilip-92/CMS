@@ -1,71 +1,24 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Advocate CMS</title>
+<title>Advocate CRM</title>
 
 <style>
 body {
-    font-family: Arial;
     margin: 0;
+    font-family: Arial;
     background: #f4f6f9;
-}
-
-input, select, button {
-    padding: 6px;
-    margin: 5px 0;
-    width: 90%;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.hidden { display: none; }
-
-/* LOGIN */
-#loginDiv {
-    width: 250px;
-    margin: 100px auto;
-    padding: 20px;
-    text-align: center;
-    background: white;
-    border-radius: 8px;
 }
 
 /* SIDEBAR */
 .sidebar {
     position: fixed;
-    width: 220px;
+    width: 230px;
     height: 100%;
     background: #2c3e50;
     color: white;
     padding: 15px;
-    transition: 0.3s;
 }
-
-.sidebar.collapsed { width: 70px; }
-
-.sidebar button {
-    width: 100%;
-    padding: 10px;
-    margin: 8px 0;
-    background: transparent;
-    color: white;
-    border: none;
-    text-align: left;
-    display: flex;
-    gap: 10px;
-    cursor: pointer;
-}
-
-.sidebar button:hover { background: #1abc9c; }
-
-.menu-text { }
-.sidebar.collapsed .menu-text { display: none; }
 
 .logo-box {
     text-align: center;
@@ -73,17 +26,35 @@ input, select, button {
 }
 
 .logo-box img {
-    width: 60px;
+    width: 70px;
+}
+
+.sidebar button {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: none;
+    background: transparent;
+    color: white;
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidebar button:hover {
+    background: #1abc9c;
 }
 
 /* CONTENT */
 .content {
-    margin-left: 240px;
+    margin-left: 250px;
     padding: 20px;
 }
 
-.sidebar.collapsed ~ .content {
-    margin-left: 90px;
+.card {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
 }
 
 /* TABLE */
@@ -95,165 +66,179 @@ table {
 th, td {
     padding: 8px;
     border-bottom: 1px solid #ddd;
-    text-align: left;
 }
 
-th { background: #eee; }
-
-.action-btn {
-    padding: 4px 8px;
-    margin-right: 5px;
-    cursor: pointer;
-}
+/* HIDDEN */
+.hidden { display: none; }
 </style>
 </head>
 
 <body>
 
-<h2 style="padding:10px;">⚖️ Advocate CRM</h2>
+<!-- SIDEBAR -->
+<div class="sidebar">
 
-<div id="loginDiv" class="card">
-    <h3>Login</h3>
-    <input id="mobile" placeholder="Mobile">
-    <input id="pin" type="password" placeholder="PIN">
-    <button onclick="login()">Login</button>
+    <div class="logo-box">
+        <img src="logo.png">
+        <h3>Advocate CRM</h3>
+    </div>
+
+    <button onclick="show('dashboard')">🏠 Dashboard</button>
+    <button onclick="show('users')">👤 User Management</button>
+    <button onclick="show('clients')">🧑 Clients</button>
+    <button onclick="show('cases')">📁 Cases</button>
+    <button onclick="show('caseType')">📂 Case Type</button>
+    <button onclick="show('court')">🏛️ Court Complex</button>
+
 </div>
 
-<div id="dashboard" class="hidden">
-
-
-
-    <button onclick="showSection('addCase')">📁 <span class="menu-text">Add</span></button>
-    <button onclick="showSection('viewCase')">📄 <span class="menu-text">Cases</span></button>
-    <button onclick="logout()">🚪 <span class="menu-text">Logout</span></button>
-    <button onclick="toggleSidebar()">☰</button>
-</div>
-
+<!-- CONTENT -->
 <div class="content">
 
-<div id="addCase" class="card section">
-    <h3>Add Case</h3>
-    <input id="client_name" placeholder="Client Name">
-    <input id="case_type" placeholder="Case Type">
-    <input id="hearing_date" type="date">
-
-    <select id="status">
-        <option>Pending</option>
-        <option>Closed</option>
-    </select>
-
-    <button onclick="addCase()">Add Case</button>
+<!-- DASHBOARD -->
+<div id="dashboard" class="card">
+    <h2>Dashboard</h2>
+    <p>Total Clients: <span id="totalClients">0</span></p>
+    <p>Total Cases: <span id="totalCases">0</span></p>
 </div>
 
-<div id="viewCase" class="card section hidden">
-    <h3>Cases</h3>
+<!-- USERS -->
+<div id="users" class="card hidden">
+    <h2>User Management</h2>
+    <input id="uname" placeholder="Name">
+    <input id="umobile" placeholder="Mobile">
+    <button onclick="addUser()">Add User</button>
+
+    <table>
+        <thead><tr><th>Name</th><th>Mobile</th></tr></thead>
+        <tbody id="userTable"></tbody>
+    </table>
+</div>
+
+<!-- CLIENTS -->
+<div id="clients" class="card hidden">
+    <h2>Add Client</h2>
+    <input id="cname" placeholder="Client Name">
+    <input id="cphone" placeholder="Phone">
+    <button onclick="addClient()">Add Client</button>
+
+    <table>
+        <thead><tr><th>Name</th><th>Phone</th></tr></thead>
+        <tbody id="clientTable"></tbody>
+    </table>
+</div>
+
+<!-- CASE TYPE -->
+<div id="caseType" class="card hidden">
+    <h2>Case Type</h2>
+    <input id="ctype" placeholder="Case Type">
+    <button onclick="addCaseType()">Add</button>
+
+    <ul id="caseTypeList"></ul>
+</div>
+
+<!-- COURT -->
+<div id="court" class="card hidden">
+    <h2>Court Complex</h2>
+    <input id="courtName" placeholder="Court Name">
+    <button onclick="addCourt()">Add</button>
+
+    <ul id="courtList"></ul>
+</div>
+
+<!-- CASES -->
+<div id="cases" class="card hidden">
+    <h2>Add Case</h2>
+
+    <input id="caseClient" placeholder="Client Name">
+    <input id="caseTypeInput" placeholder="Case Type">
+    <input id="caseCourt" placeholder="Court">
+    <input type="date" id="caseDate">
+
+    <button onclick="addCase()">Add Case</button>
 
     <table>
         <thead>
             <tr>
                 <th>Client</th>
                 <th>Type</th>
+                <th>Court</th>
                 <th>Date</th>
-                <th>Status</th>
-                <th>Action</th>
             </tr>
         </thead>
         <tbody id="caseTable"></tbody>
     </table>
-
 </div>
 
 </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const supabaseUrl = "https://nkkhaxjmbjyaerycdobr.supabase.co";
-const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ra2hheGptYmp5YWVyeWNkb2JyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NjAyMjcsImV4cCI6MjA4OTMzNjIyN30.JayQMtvX5DARwKwowFtqczmGhaeiC58KOHXrAdPzaTg";
+let users = [];
+let clients = [];
+let cases = [];
+let caseTypes = [];
+let courts = [];
 
-const db = supabase.createClient(supabaseUrl, supabaseKey);
-
-async function login() {
-    const mobile = document.getElementById("mobile").value;
-    const pin = document.getElementById("pin").value;
-
-    const { data } = await db.from('users')
-        .select('*')
-        .eq('mobile', mobile)
-        .eq('pin', pin);
-
-    if (data.length) {
-        document.getElementById("loginDiv").classList.add("hidden");
-        document.getElementById("dashboard").classList.remove("hidden");
-        getCases();
-    } else {
-        alert("Invalid Login");
-    }
+// NAV
+function show(id){
+    document.querySelectorAll('.card').forEach(c=>c.classList.add('hidden'));
+    document.getElementById(id).classList.remove('hidden');
 }
 
-function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("collapsed");
+// USER
+function addUser(){
+    users.push({name: uname.value, mobile: umobile.value});
+    renderUsers();
 }
 
-function showSection(id) {
-    document.querySelectorAll(".section").forEach(s => s.classList.add("hidden"));
-    document.getElementById(id).classList.remove("hidden");
+function renderUsers(){
+    userTable.innerHTML = users.map(u=>`<tr><td>${u.name}</td><td>${u.mobile}</td></tr>`).join('');
 }
 
-function logout() {
-    location.reload();
+// CLIENT
+function addClient(){
+    clients.push({name: cname.value, phone: cphone.value});
+    renderClients();
 }
 
-// ADD
-async function addCase() {
-    await db.from('cases').insert([{
-        client_name: client_name.value,
-        case_type: case_type.value,
-        hearing_date: hearing_date.value,
-        status: status.value
-    }]);
-
-    alert("Added");
-    getCases();
+function renderClients(){
+    clientTable.innerHTML = clients.map(c=>`<tr><td>${c.name}</td><td>${c.phone}</td></tr>`).join('');
+    totalClients.innerText = clients.length;
 }
 
-// GET
-async function getCases() {
-    const { data } = await db.from('cases').select('*');
+// CASE TYPE
+function addCaseType(){
+    caseTypes.push(ctype.value);
+    caseTypeList.innerHTML = caseTypes.map(c=>`<li>${c}</li>`).join('');
+}
 
-    let html = "";
+// COURT
+function addCourt(){
+    courts.push(courtName.value);
+    courtList.innerHTML = courts.map(c=>`<li>${c}</li>`).join('');
+}
 
-    data.forEach(c => {
-        html += `
-        <tr>
-            <td>${c.client_name}</td>
-            <td>${c.case_type}</td>
-            <td>${c.hearing_date}</td>
-            <td>${c.status}</td>
-            <td>
-                <button class="action-btn" onclick="editCase('${c.id}')">Edit</button>
-                <button class="action-btn" onclick="deleteCase('${c.id}')">Delete</button>
-            </td>
-        </tr>`;
+// CASE
+function addCase(){
+    cases.push({
+        client: caseClient.value,
+        type: caseTypeInput.value,
+        court: caseCourt.value,
+        date: caseDate.value
     });
-
-    caseTable.innerHTML = html;
+    renderCases();
 }
 
-// DELETE
-async function deleteCase(id) {
-    await db.from('cases').delete().eq('id', id);
-    getCases();
-}
+function renderCases(){
+    caseTable.innerHTML = cases.map(c=>`
+        <tr>
+            <td>${c.client}</td>
+            <td>${c.type}</td>
+            <td>${c.court}</td>
+            <td>${c.date}</td>
+        </tr>`).join('');
 
-// EDIT
-async function editCase(id) {
-    const name = prompt("Enter new client name");
-    if (!name) return;
-
-    await db.from('cases').update({ client_name: name }).eq('id', id);
-    getCases();
+    totalCases.innerText = cases.length;
 }
 </script>
 
